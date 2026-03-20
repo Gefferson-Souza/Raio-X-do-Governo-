@@ -65,7 +65,7 @@ export default async function Home() {
   const contratos = contractsResult.data
 
   const topContracts = [...contratos]
-    .sort((a, b) => b.valorFinal - a.valorFinal)
+    .sort((a, b) => b.valorFinalCompra - a.valorFinalCompra)
     .slice(0, 3)
 
   const statsItems = [
@@ -222,12 +222,12 @@ export default async function Home() {
             {topContracts.map((contrato, index) => (
               <ContractCard
                 key={contrato.id}
-                icon={pickContractIcon(contrato.dimCompra.objeto)}
-                title={contrato.dimCompra.objeto}
-                description={`${contrato.fornecedor.nome} - CNPJ: ${contrato.fornecedor.cnpjCpf}`}
-                value={humanizeNumber(contrato.valorFinal)}
+                icon={pickContractIcon(contrato.compra.objeto)}
+                title={contrato.compra.objeto}
+                description={`${contrato.fornecedor.nome} - CNPJ: ${contrato.fornecedor.cnpjFormatado}`}
+                value={humanizeNumber(contrato.valorFinalCompra)}
                 category={contrato.unidadeGestora.orgaoVinculado.nome}
-                status={`CONTRATO ${contrato.dimCompra.numero} - VIGENCIA ATE ${formatDateBR(contrato.dataFimVigencia)}`}
+                status={`CONTRATO ${contrato.compra.numero} - VIGENCIA ATE ${formatDateBR(contrato.dataFimVigencia)}`}
                 borderColor={pickBorderColor(index)}
               />
             ))}

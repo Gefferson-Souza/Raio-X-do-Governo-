@@ -60,10 +60,10 @@ export default async function CarrinhoPage() {
   const hasContracts = contracts.length > 0
 
   const topContracts = [...contracts]
-    .sort((a, b) => b.valorFinal - a.valorFinal)
+    .sort((a, b) => b.valorFinalCompra - a.valorFinalCompra)
     .slice(0, 12)
 
-  const totalContratos = contracts.reduce((sum, c) => sum + c.valorFinal, 0)
+  const totalContratos = contracts.reduce((sum, c) => sum + c.valorFinalCompra, 0)
 
   return (
     <div className="pb-12 lg:pl-8 px-4 md:px-8">
@@ -137,9 +137,9 @@ export default async function CarrinhoPage() {
             style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))' }}
           >
             {topContracts.map((contrato) => {
-              const equivalence = pickEquivalence(contrato.valorFinal)
-              const icon = pickIcon(contrato.dimCompra?.objeto || '')
-              const objeto = contrato.dimCompra?.objeto || 'Contrato Federal'
+              const equivalence = pickEquivalence(contrato.valorFinalCompra)
+              const icon = pickIcon(contrato.compra?.objeto || '')
+              const objeto = contrato.compra?.objeto || 'Contrato Federal'
               const fornecedor = contrato.fornecedor?.nome || 'Nao informado'
 
               return (
@@ -171,7 +171,7 @@ export default async function CarrinhoPage() {
                         Valor do Contrato
                       </span>
                       <span className="block text-2xl font-black font-headline text-error">
-                        {formatBRL(contrato.valorFinal)}
+                        {formatBRL(contrato.valorFinalCompra)}
                       </span>
                     </div>
 

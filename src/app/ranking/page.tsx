@@ -336,8 +336,8 @@ export default async function RankingPage() {
                   key={contrato.id}
                   time={formatTimeBR(contrato.dataAssinatura)}
                   orgao={contrato.unidadeGestora.orgaoVinculado.nome}
-                  description={contrato.dimCompra.objeto}
-                  value={humanizeNumber(contrato.valorFinal)}
+                  description={contrato.compra.objeto}
+                  value={humanizeNumber(contrato.valorFinalCompra)}
                   status={status}
                   isSuspect={status === 'suspeito'}
                 />

@@ -28,21 +28,25 @@ describe('API types', () => {
     it('accepts a valid shape', () => {
       const contrato: Contrato = {
         id: 1,
+        numero: '00001/2025',
+        objeto: 'Serviços de TI',
+        situacaoContrato: 'Vigente',
         dataAssinatura: '2025-01-15',
         dataFimVigencia: '2026-01-15',
         dataInicioVigencia: '2025-01-15',
-        dimCompra: { numero: '00001/2025', objeto: 'Serviços de TI' },
-        fornecedor: { cnpjCpf: '12345678000100', nome: 'Empresa X' },
+        compra: { numero: '00001/2025', objeto: 'Serviços de TI' },
+        fornecedor: { id: 1, cnpjFormatado: '12.345.678/0001-00', nome: 'Empresa X', tipo: 'PJ' },
         unidadeGestora: {
           codigo: '110001',
           nome: 'UG Test',
-          orgaoVinculado: { codigo: '10000', nome: 'Orgao Y' },
+          orgaoVinculado: { nome: 'Orgao Y', sigla: 'OY' },
+          orgaoMaximo: { codigo: '10000', nome: 'Orgao Y', sigla: 'OY' },
         },
-        valorFinal: 500_000,
-        valorInicial: 400_000,
+        valorFinalCompra: 500_000,
+        valorInicialCompra: 400_000,
       }
       expect(contrato.id).toBe(1)
-      expect(contrato.dimCompra.objeto).toBe('Serviços de TI')
+      expect(contrato.compra.objeto).toBe('Serviços de TI')
       expect(contrato.unidadeGestora.orgaoVinculado.nome).toBe('Orgao Y')
     })
   })
