@@ -23,27 +23,18 @@ interface CodanteSenator {
   readonly id: number
   readonly name: string
   readonly party: string
-  readonly uf: string
-  readonly photo_url: string
+  readonly UF: string
+  readonly avatar_url: string | null
 }
 
 interface CodanteSenatorExpense {
   readonly data: readonly {
-    readonly amount: number
-    readonly expense_category: string
+    readonly amount: string
   }[]
   readonly meta: {
-    readonly expenses_sum: number
+    readonly expenses_sum: string | null
     readonly expenses_count: number
   }
-}
-
-interface CodantePartySummary {
-  readonly data: readonly {
-    readonly party: string
-    readonly total_expenses: number
-    readonly senator_count: number
-  }[]
 }
 
 export async function fetchSenadores(): Promise<readonly SenadorRanking[]> {
@@ -56,14 +47,15 @@ export async function fetchSenadores(): Promise<readonly SenadorRanking[]> {
   for (const senator of senators.slice(0, 30)) {
     let totalGasto = 0
 
-    // Try current year first, fallback to previous year if API returns error
     for (const year of [currentYear, currentYear - 1]) {
       try {
         const expenses = await codanteGet<CodanteSenatorExpense>(
           `/senators/${senator.id}/expenses`,
           { year },
         )
-        totalGasto = expenses.meta?.expenses_sum ?? 0
+        const sum = expenses.meta?.expenses_sum
+        totalGasto = sum ? parseFloat(String(sum)) : 0
+        if (isNaN(totalGasto)) totalGasto = 0
         if (totalGasto > 0) break
       } catch {
         continue
@@ -74,8 +66,8 @@ export async function fetchSenadores(): Promise<readonly SenadorRanking[]> {
       id: senator.id,
       nome: senator.name,
       partido: senator.party,
-      uf: senator.uf,
-      foto: senator.photo_url ?? '',
+      uf: senator.UF ?? '',
+      foto: senator.avatar_url ?? '',
       totalGasto,
     })
   }
@@ -88,7 +80,7 @@ interface CodantePartySummaryYear {
   readonly data: readonly {
     readonly party: string
     readonly total_expenses: number
-    readonly senator_count: number
+    readonly senator_ids: readonly number[]
   }[]
 }
 
@@ -103,7 +95,7 @@ export async function fetchResumoPartidos(): Promise<readonly PartidoResumo[]> {
     return latest.data.map((p) => ({
       partido: p.party,
       totalGasto: p.total_expenses,
-      quantidadeParlamentares: p.senator_count,
+      quantidadeParlamentares: p.senator_ids?.length ?? 0,
     }))
   } catch {
     return []

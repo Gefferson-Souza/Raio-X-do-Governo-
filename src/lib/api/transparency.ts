@@ -1,4 +1,4 @@
-import type { Contrato, DespesaPorOrgaoRaw, DespesaPorOrgao, EmpresaSancionada, SpendingSummary, EmendaParlamentar, ViagemOficial, CartaoPagamento, ServidorRemuneracao } from './types'
+import type { Contrato, DespesaPorOrgaoRaw, DespesaPorOrgao, EmpresaSancionada, SpendingSummary, EmendaParlamentarRaw, ViagemOficialRaw, CartaoPagamentoRaw } from './types'
 
 const BASE_URL = 'https://api.portaldatransparencia.gov.br/api-de-dados'
 const TIMEOUT_MS = 15_000
@@ -163,16 +163,16 @@ export async function fetchCEIS(pagina: number = 1): Promise<EmpresaSancionada[]
   return apiGet<EmpresaSancionada[]>('/ceis', { pagina })
 }
 
-export async function fetchEmendas(ano: number, pagina: number = 1): Promise<EmendaParlamentar[]> {
-  return apiGet<EmendaParlamentar[]>('/emendas', { ano, pagina })
+export async function fetchEmendas(ano: number, pagina: number = 1): Promise<EmendaParlamentarRaw[]> {
+  return apiGet<EmendaParlamentarRaw[]>('/emendas', { ano, pagina })
 }
 
 export async function fetchViagens(
   dataIdaDe: string,
   dataIdaAte: string,
   pagina: number = 1,
-): Promise<ViagemOficial[]> {
-  return apiGet<ViagemOficial[]>('/viagens', {
+): Promise<ViagemOficialRaw[]> {
+  return apiGet<ViagemOficialRaw[]>('/viagens', {
     dataIdaDe,
     dataIdaAte,
     pagina,
@@ -183,20 +183,10 @@ export async function fetchCartoes(
   dataTransacaoDe: string,
   dataTransacaoAte: string,
   pagina: number = 1,
-): Promise<CartaoPagamento[]> {
-  return apiGet<CartaoPagamento[]>('/cartoes', {
+): Promise<CartaoPagamentoRaw[]> {
+  return apiGet<CartaoPagamentoRaw[]>('/cartoes', {
     dataTransacaoDe,
     dataTransacaoAte,
-    pagina,
-  })
-}
-
-export async function fetchRemuneracao(
-  mesAno: string,
-  pagina: number = 1,
-): Promise<ServidorRemuneracao[]> {
-  return apiGet<ServidorRemuneracao[]>('/servidores/remuneracao', {
-    mesAno,
     pagina,
   })
 }

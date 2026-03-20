@@ -1,14 +1,13 @@
 import { NextResponse } from 'next/server'
-import { setCache } from '@/lib/api/cache'
+import { getCached, setCache } from '@/lib/api/cache'
 import { fetchAllDeputados, fetchDespesasDeputado } from '@/lib/api/camara'
 import { fetchSenadores, fetchResumoPartidos } from '@/lib/api/senado'
-import { fetchEmendas, fetchViagens, fetchCartoes, fetchRemuneracao } from '@/lib/api/transparency'
+import { fetchEmendas, fetchViagens, fetchCartoes } from '@/lib/api/transparency'
 import type {
   DeputadoRanking,
   EmendaResumo,
   ViagemResumo,
   CartaoResumo,
-  ServidorTopRemuneracao,
   PoliticiansData,
 } from '@/lib/api/camara-types'
 
@@ -16,7 +15,9 @@ export const maxDuration = 300
 export const dynamic = 'force-dynamic'
 
 const CACHE_KEY = 'politicians-data'
+const CACHE_KEY_ANO_ANTERIOR = 'politicians-ano-anterior'
 const CACHE_TTL = 86_400
+const CACHE_TTL_ANO_ANTERIOR = 30 * 86_400
 
 function verifyCronSecret(request: Request): boolean {
   const authHeader = request.headers.get('authorization')
@@ -31,12 +32,20 @@ function formatDatePT(date: Date): string {
   return `${d}/${m}/${date.getFullYear()}`
 }
 
-async function buildDeputadosRanking(): Promise<{
+function parseBRNumber(value: string | number | null | undefined): number {
+  if (value === null || value === undefined) return 0
+  if (typeof value === 'number') return value
+  if (typeof value !== 'string' || value === '-' || value === '') return 0
+  const cleaned = value.replace(/\./g, '').replace(',', '.')
+  const num = parseFloat(cleaned)
+  return isNaN(num) ? 0 : num
+}
+
+async function buildDeputadosRanking(year: number): Promise<{
   ranking: readonly DeputadoRanking[]
   totalGasto: number
 }> {
   const deputados = await fetchAllDeputados()
-  const year = new Date().getFullYear()
   const rankings: DeputadoRanking[] = []
   const batchSize = 5
   const delayMs = 1_500
@@ -89,12 +98,11 @@ async function buildDeputadosRanking(): Promise<{
   return { ranking: sorted.slice(0, 20), totalGasto }
 }
 
-async function buildEmendasData(): Promise<{
+async function buildEmendasData(year: number): Promise<{
   topAutores: readonly EmendaResumo[]
   totalPago: number
   totalEmpenhado: number
 }> {
-  const year = new Date().getFullYear()
   const allEmendas = []
 
   for (let page = 1; page <= 3; page++) {
@@ -113,13 +121,14 @@ async function buildEmendasData(): Promise<{
   let totalEmpenhado = 0
 
   for (const e of allEmendas) {
-    const pago = e.valorPago ?? 0
-    const empenhado = e.valorEmpenhado ?? 0
+    const pago = parseBRNumber(e.valorPago)
+    const empenhado = parseBRNumber(e.valorEmpenhado)
     totalPago += pago
     totalEmpenhado += empenhado
 
-    const existing = byAutor.get(e.autor) ?? { pago: 0, empenhado: 0, count: 0 }
-    byAutor.set(e.autor, {
+    const autorNome = e.nomeAutor || e.autor || 'Desconhecido'
+    const existing = byAutor.get(autorNome) ?? { pago: 0, empenhado: 0, count: 0 }
+    byAutor.set(autorNome, {
       pago: existing.pago + pago,
       empenhado: existing.empenhado + empenhado,
       count: existing.count + 1,
@@ -148,18 +157,18 @@ async function buildViagensData(): Promise<{
   past.setDate(today.getDate() - 30)
 
   try {
-    const viagens = await fetchViagens(formatDatePT(past), formatDatePT(today), 1)
+    const raw = await fetchViagens(formatDatePT(past), formatDatePT(today), 1)
 
-    const recentes: ViagemResumo[] = viagens
+    const recentes: ViagemResumo[] = raw
       .slice(0, 15)
       .map((v) => ({
-        viajante: v.viajante ?? 'N/A',
-        cargo: v.cargo ?? '',
-        orgao: v.orgaoSuperior ?? '',
-        destino: v.destinos ?? '',
-        motivo: v.motivo ?? '',
-        valorTotal: (v.valorPassagens ?? 0) + (v.valorDiarias ?? 0),
-        dataInicio: v.dataInicio ?? '',
+        viajante: v.beneficiario?.nome ?? 'N/A',
+        cargo: v.cargo?.descricao ?? '',
+        orgao: v.orgao?.orgaoMaximo?.nome ?? '',
+        destino: '',
+        motivo: v.viagem?.motivo ?? '',
+        valorTotal: (v.valorTotalPassagem ?? 0) + (v.valorTotalDiarias ?? 0),
+        dataInicio: v.dataInicioAfastamento ?? '',
       }))
       .sort((a, b) => b.valorTotal - a.valorTotal)
 
@@ -179,17 +188,19 @@ async function buildCartoesData(): Promise<{
   past.setMonth(today.getMonth() - 3)
 
   try {
-    const cartoes = await fetchCartoes(formatDatePT(past), formatDatePT(today), 1)
+    const raw = await fetchCartoes(formatDatePT(past), formatDatePT(today), 1)
 
     const byPortador = new Map<string, { orgao: string; total: number; count: number }>()
     let totalGasto = 0
 
-    for (const c of cartoes) {
-      const val = c.valorTransacao ?? 0
+    for (const c of raw) {
+      const val = parseBRNumber(c.valorTransacao)
       totalGasto += val
-      const existing = byPortador.get(c.nomePortador) ?? { orgao: c.orgaoSuperior ?? '', total: 0, count: 0 }
-      byPortador.set(c.nomePortador, {
-        orgao: existing.orgao || (c.orgaoSuperior ?? ''),
+      const nome = c.portador?.nome ?? 'N/A'
+      const orgao = c.unidadeGestora?.orgaoMaximo?.nome ?? ''
+      const existing = byPortador.get(nome) ?? { orgao: '', total: 0, count: 0 }
+      byPortador.set(nome, {
+        orgao: existing.orgao || orgao,
         total: existing.total + val,
         count: existing.count + 1,
       })
@@ -211,30 +222,37 @@ async function buildCartoesData(): Promise<{
   }
 }
 
-async function buildRemuneracoesData(): Promise<{
-  topServidores: readonly ServidorTopRemuneracao[]
-}> {
-  const now = new Date()
-  const mesAno = `${now.getFullYear()}${String(now.getMonth()).padStart(2, '0')}`
+interface AnoAnteriorData {
+  deputadosTotalGasto: number
+  senadoresotalGasto: number
+  emendasTotalPago: number
+}
 
-  try {
-    const servidores = await fetchRemuneracao(mesAno, 1)
+async function fetchOrCacheAnoAnterior(anoAnterior: number): Promise<AnoAnteriorData> {
+  const cached = await getCached<AnoAnteriorData>(CACHE_KEY_ANO_ANTERIOR)
+  if (cached) return cached
 
-    const topServidores: ServidorTopRemuneracao[] = servidores
-      .map((s) => ({
-        nome: s.nome ?? 'N/A',
-        cargo: s.cargo ?? s.funcao ?? '',
-        orgao: s.orgaoSuperiorServidorExercicio ?? '',
-        remuneracaoBruta: s.remuneracaoBasicaBruta ?? 0,
-        remuneracaoLiquida: s.remuneracaoAposDeducoes ?? 0,
-      }))
-      .sort((a, b) => b.remuneracaoBruta - a.remuneracaoBruta)
-      .slice(0, 15)
+  console.log(`[cron/politicians] Fetching previous year (${anoAnterior}) data...`)
 
-    return { topServidores }
-  } catch {
-    return { topServidores: [] }
+  const [depResult, senResult, emResult] = await Promise.allSettled([
+    buildDeputadosRanking(anoAnterior),
+    fetchSenadores(),
+    buildEmendasData(anoAnterior),
+  ])
+
+  const data: AnoAnteriorData = {
+    deputadosTotalGasto:
+      depResult.status === 'fulfilled' ? depResult.value.totalGasto : 0,
+    senadoresotalGasto:
+      senResult.status === 'fulfilled'
+        ? senResult.value.reduce((s, sen) => s + sen.totalGasto, 0)
+        : 0,
+    emendasTotalPago:
+      emResult.status === 'fulfilled' ? emResult.value.totalPago : 0,
   }
+
+  await setCache(CACHE_KEY_ANO_ANTERIOR, data, CACHE_TTL_ANO_ANTERIOR)
+  return data
 }
 
 export async function GET(request: Request) {
@@ -242,18 +260,21 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  console.log('[cron/politicians] Starting data collection...')
+  const anoAtual = new Date().getFullYear()
+  const anoAnterior = anoAtual - 1
+
+  console.log(`[cron/politicians] Starting (${anoAtual} + ${anoAnterior})...`)
   const startTime = Date.now()
 
-  const [depResult, senResult, partResult, emendasResult, viagensResult, cartoesResult, remResult] =
+  const [depResult, senResult, partResult, emendasResult, viagensResult, cartoesResult, anoAntResult] =
     await Promise.allSettled([
-      buildDeputadosRanking(),
+      buildDeputadosRanking(anoAtual),
       fetchSenadores(),
       fetchResumoPartidos(),
-      buildEmendasData(),
+      buildEmendasData(anoAtual),
       buildViagensData(),
       buildCartoesData(),
-      buildRemuneracoesData(),
+      fetchOrCacheAnoAnterior(anoAnterior),
     ])
 
   const deputadosData =
@@ -282,30 +303,38 @@ export async function GET(request: Request) {
       ? cartoesResult.value
       : { topPortadores: [] as CartaoResumo[], totalGasto: 0 }
 
-  const remData =
-    remResult.status === 'fulfilled'
-      ? remResult.value
-      : { topServidores: [] as ServidorTopRemuneracao[] }
+  const anoAntData =
+    anoAntResult.status === 'fulfilled'
+      ? anoAntResult.value
+      : { deputadosTotalGasto: 0, senadoresotalGasto: 0, emendasTotalPago: 0 }
 
-  const allResults = [depResult, senResult, partResult, emendasResult, viagensResult, cartoesResult, remResult]
-  const failures = allResults.filter((r) => r.status === 'rejected')
+  const coreResults = [depResult, senResult, partResult, emendasResult, viagensResult, cartoesResult]
+  const failures = coreResults.filter((r) => r.status === 'rejected')
 
   const status: 'ok' | 'partial' | 'error' =
-    failures.length === allResults.length ? 'error' : failures.length > 0 ? 'partial' : 'ok'
+    failures.length === coreResults.length ? 'error' : failures.length > 0 ? 'partial' : 'ok'
 
   const totalSenadores = senadoresRanking.reduce((s, sen) => s + sen.totalGasto, 0)
 
   const data: PoliticiansData = {
-    deputados: deputadosData,
+    periodo: { anoAtual, anoAnterior },
+    deputados: {
+      ...deputadosData,
+      totalGastoAnoAnterior: anoAntData.deputadosTotalGasto,
+    },
     senadores: {
       ranking: senadoresRanking.slice(0, 20),
       porPartido: partidosResumo,
       totalGasto: totalSenadores,
+      totalGastoAnoAnterior: anoAntData.senadoresotalGasto,
     },
-    emendas: emendasData,
+    emendas: {
+      ...emendasData,
+      totalPagoAnoAnterior: anoAntData.emendasTotalPago,
+    },
     viagens: viagensData,
     cartoes: cartoesData,
-    remuneracoes: remData,
+    remuneracoes: { topServidores: [] },
     atualizadoEm: new Date().toISOString(),
     status,
   }
@@ -313,17 +342,18 @@ export async function GET(request: Request) {
   await setCache(CACHE_KEY, data, CACHE_TTL)
 
   const elapsed = ((Date.now() - startTime) / 1000).toFixed(1)
-  console.log(`[cron/politicians] Done in ${elapsed}s. Status: ${status}. Failures: ${failures.length}/7`)
+  console.log(`[cron/politicians] Done in ${elapsed}s. Status: ${status}`)
 
   return NextResponse.json({
     success: true,
     status,
+    periodo: { anoAtual, anoAnterior },
     deputados: deputadosData.ranking.length,
     senadores: senadoresRanking.length,
     emendas: emendasData.topAutores.length,
     viagens: viagensData.recentes.length,
     cartoes: cartoesData.topPortadores.length,
-    remuneracoes: remData.topServidores.length,
+    anoAnteriorCached: anoAntResult.status === 'fulfilled',
     elapsed: `${elapsed}s`,
   })
 }

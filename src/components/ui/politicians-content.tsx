@@ -13,7 +13,7 @@ interface PoliticiansContentProps {
 }
 
 export function PoliticiansContent({ initialData }: PoliticiansContentProps) {
-  const { data } = useQuery<PoliticiansData>({
+  const { data, isFetching, isError } = useQuery<PoliticiansData>({
     queryKey: ['politicians'],
     queryFn: async () => {
       const res = await fetch('/api/politicians')
@@ -25,6 +25,8 @@ export function PoliticiansContent({ initialData }: PoliticiansContentProps) {
       ? new Date(initialData.atualizadoEm).getTime()
       : 0,
     refetchInterval: 60 * 60 * 1000,
+    retry: 2,
+    retryDelay: 5000,
   })
 
   const hasData = data.atualizadoEm !== ''
@@ -33,21 +35,44 @@ export function PoliticiansContent({ initialData }: PoliticiansContentProps) {
   const perCapita = custoTotal > 0 ? custoTotal / REFERENCES.populacaoBR : 0
   const perDay = custoTotal > 0 ? custoTotal / 365 : 0
 
-  if (!hasData) {
+  if (!hasData && isFetching) {
     return (
       <section className="mt-8">
         <div className="bg-surface-container border-2 border-outline-variant p-8 text-center">
-          <MaterialIcon icon="hourglass_empty" size={48} className="text-on-surface-variant/30" />
-          <h3 className="font-headline font-black uppercase text-xl mt-4">
-            DADOS SENDO COLETADOS
+          <div className="inline-block animate-spin mb-4">
+            <MaterialIcon icon="progress_activity" size={48} className="text-primary" />
+          </div>
+          <h3 className="font-headline font-black uppercase text-xl">
+            BUSCANDO DADOS DOS POLITICOS...
           </h3>
           <p className="font-body text-on-surface-variant mt-2 max-w-md mx-auto">
-            Os dados de politicos sao coletados automaticamente a cada 24 horas.
-            Volte em breve para ver o ranking completo.
+            Estamos consultando a Camara dos Deputados e o Senado Federal.
+            Isso pode levar ate 1 minuto na primeira vez.
           </p>
         </div>
       </section>
     )
+  }
+
+  if (!hasData && isError) {
+    return (
+      <section className="mt-8">
+        <div className="bg-surface-container border-2 border-error/30 p-8 text-center">
+          <MaterialIcon icon="cloud_off" size={48} className="text-error/50" />
+          <h3 className="font-headline font-black uppercase text-xl mt-4">
+            APIS DO GOVERNO FORA DO AR
+          </h3>
+          <p className="font-body text-on-surface-variant mt-2 max-w-md mx-auto">
+            Nao foi possivel consultar os dados da Camara e do Senado neste momento.
+            Tente novamente em alguns minutos.
+          </p>
+        </div>
+      </section>
+    )
+  }
+
+  if (!hasData) {
+    return null
   }
 
   return (

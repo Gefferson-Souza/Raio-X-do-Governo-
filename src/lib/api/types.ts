@@ -71,62 +71,61 @@ export interface EmpresaSancionada {
   }
 }
 
-export interface EmendaParlamentar {
+export interface EmendaParlamentarRaw {
   codigoEmenda: string
   ano: number
   tipoEmenda: string
   autor: string
+  nomeAutor: string
   localidadeDoGasto: string
-  funcaoEmenda: string
-  subfuncaoEmenda: string
-  valorEmpenhado: number
-  valorLiquidado: number
-  valorPago: number
+  funcao: string
+  subfuncao: string
+  valorEmpenhado: string
+  valorLiquidado: string
+  valorPago: string
 }
 
-export interface ViagemOficial {
+export interface ViagemOficialRaw {
   id: number
   situacao: string
-  viajante: string
-  cargo: string
-  orgaoSuperior: string
-  dataInicio: string
-  dataFim: string
-  destinos: string
-  motivo: string
-  valorPassagens: number
-  valorDiarias: number
-  valorTotal: number
+  dataInicioAfastamento: string
+  dataFimAfastamento: string
+  valorTotalPassagem: number
+  valorTotalDiarias: number
+  valorTotalViagem: number
+  beneficiario: {
+    nome: string
+  }
+  cargo: {
+    descricao: string
+  }
+  orgao: {
+    orgaoMaximo: {
+      nome: string
+    }
+  }
+  viagem: {
+    motivo: string
+  }
 }
 
-export interface CartaoPagamento {
+export interface CartaoPagamentoRaw {
   id: number
-  cpfPortador: string
-  nomePortador: string
-  unidadeGestora: string
-  orgaoSuperior: string
   dataTransacao: string
-  valorTransacao: number
-  tipoCartao: string
-}
-
-export interface ServidorRemuneracao {
-  id: number
-  nome: string
-  cpf: string
-  orgaoServidorExercicio: string
-  orgaoSuperiorServidorExercicio: string
-  funcao: string
-  cargo: string
-  remuneracaoBasicaBruta: number
-  gratificacaoNatalina: number
-  ferias: number
-  outrasRemuneracoes: number
-  irrf: number
-  pssSeguridadeSocial: number
-  demaisDeducoes: number
-  remuneracaoAposDeducoes: number
-  mesAno: string
+  valorTransacao: string
+  mesExtrato: string
+  portador: {
+    nome: string
+    cpfFormatado: string
+  }
+  unidadeGestora: {
+    orgaoMaximo: {
+      nome: string
+    }
+  }
+  tipoCartao: {
+    descricao: string
+  }
 }
 
 export interface SpendingSummary {

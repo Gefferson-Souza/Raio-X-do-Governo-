@@ -4,7 +4,7 @@ export interface DeputadoRaw {
   readonly siglaPartido: string
   readonly siglaUf: string
   readonly urlFoto: string
-  readonly email: string
+  readonly email: string | null
 }
 
 export interface DespesaDeputadoRaw {
@@ -59,20 +59,29 @@ export interface ServidorTopRemuneracao {
   readonly remuneracaoLiquida: number
 }
 
+export interface PeriodoData {
+  readonly anoAtual: number
+  readonly anoAnterior: number
+}
+
 export interface PoliticiansData {
+  readonly periodo: PeriodoData
   readonly deputados: {
     readonly ranking: readonly DeputadoRanking[]
     readonly totalGasto: number
+    readonly totalGastoAnoAnterior: number
   }
   readonly senadores: {
     readonly ranking: readonly SenadorRanking[]
     readonly porPartido: readonly PartidoResumo[]
     readonly totalGasto: number
+    readonly totalGastoAnoAnterior: number
   }
   readonly emendas: {
     readonly topAutores: readonly EmendaResumo[]
     readonly totalPago: number
     readonly totalEmpenhado: number
+    readonly totalPagoAnoAnterior: number
   }
   readonly viagens: {
     readonly recentes: readonly ViagemResumo[]

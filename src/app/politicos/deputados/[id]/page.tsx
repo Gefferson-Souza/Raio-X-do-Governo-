@@ -8,17 +8,7 @@ import { convertToEquivalences } from '@/lib/utils/equivalences'
 import { REFERENCES } from '@/lib/utils/constants'
 import { MaterialIcon } from '@/components/icons/material-icon'
 import Link from 'next/link'
-
-const EMPTY_DATA: PoliticiansData = {
-  deputados: { ranking: [], totalGasto: 0 },
-  senadores: { ranking: [], porPartido: [], totalGasto: 0 },
-  emendas: { topAutores: [], totalPago: 0, totalEmpenhado: 0 },
-  viagens: { recentes: [], totalGasto: 0 },
-  cartoes: { topPortadores: [], totalGasto: 0 },
-  remuneracoes: { topServidores: [] },
-  atualizadoEm: '',
-  status: 'error',
-}
+import { EMPTY_POLITICIANS_DATA } from '@/lib/utils/empty-politicians-data'
 
 export default function DeputadoDetailPage() {
   const params = useParams<{ id: string }>()
@@ -31,7 +21,7 @@ export default function DeputadoDetailPage() {
       if (!res.ok) throw new Error('Failed to fetch')
       return res.json()
     },
-    initialData: EMPTY_DATA,
+    initialData: EMPTY_POLITICIANS_DATA,
     initialDataUpdatedAt: 0,
     refetchInterval: 60 * 60 * 1000,
   })
