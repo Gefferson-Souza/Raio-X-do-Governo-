@@ -1,130 +1,118 @@
 import { MaterialIcon } from '@/components/icons/material-icon'
 import { getSpendingData } from '@/lib/services/spending-service'
-import { humanizeNumber } from '@/lib/utils/format'
+import { getRecentContracts } from '@/lib/services/contracts-service'
+import { humanizeNumber, formatBRL } from '@/lib/utils/format'
+import { convertToEquivalences } from '@/lib/utils/equivalences'
+import { DataSourceBanner } from '@/components/ui/data-source-banner'
 
 export const revalidate = 300
 
-const BADGE_STYLES: Record<string, string> = {
-  VERIFICADO: 'bg-secondary-container text-on-secondary-container',
-  'CONTRATO ATIVO': 'bg-tertiary-container text-on-tertiary-container',
-  'DENUNCIA': 'bg-error-container text-on-error-container',
-  VAZAMENTO: 'bg-error text-on-error',
-  SUPERFATURADO: 'bg-error-container text-on-error-container',
-  EXTERNO: 'bg-surface-container-high text-on-surface-variant',
+const ICON_MAP: Record<string, string> = {
+  TRANSPORTE: 'flight',
+  AEREO: 'flight',
+  VIAGEM: 'flight',
+  MOBILIARIO: 'chair',
+  MOVEIS: 'chair',
+  ALIMENTACAO: 'restaurant',
+  BUFFET: 'restaurant',
+  CONSULTORIA: 'campaign',
+  COMUNICACAO: 'campaign',
+  REFORMA: 'construction',
+  OBRA: 'construction',
+  VEICULO: 'directions_car',
+  BLINDADO: 'directions_car',
+  TECNOLOGIA: 'computer',
+  SOFTWARE: 'computer',
+  SAUDE: 'local_hospital',
+  MEDICAMENTO: 'medication',
+  SEGURANCA: 'shield',
+  EDUCACAO: 'school',
 }
 
-const CART_ITEMS = [
-  {
-    title: 'Lagostas e Vinhos de Reserva',
-    description:
-      'Compra recorrente de lagostas, vinhos importados e cortes nobres para eventos oficiais em gabinetes ministeriais.',
-    costLabel: 'R$ 2.400,00',
-    costUnit: '/unidade',
-    equivalence: '1 JANTA = 12 CESTAS BASICAS',
-    badge: 'VERIFICADO',
-    icon: 'restaurant',
-  },
-  {
-    title: 'Sofa de Veludo de Grife',
-    description:
-      'Aquisicao de mobiliario italiano de luxo para salas de reuniao em orgaos federais com dispensa de licitacao.',
-    costLabel: 'R$ 65.000,00',
-    costUnit: '/unidade',
-    equivalence: '1 SOFA = 260 CONSULTAS SUS',
-    badge: 'CONTRATO ATIVO',
-    icon: 'chair',
-  },
-  {
-    title: 'Canetas Tinteiro Ouro 18k',
-    description:
-      'Canetas banhadas a ouro com gravacao personalizada para cerimoniais de assinatura de atos oficiais.',
-    costLabel: 'R$ 12.800,00',
-    costUnit: '/unidade',
-    equivalence: '1 CANETA = 80 KITS ESCOLARES',
-    badge: 'DENUNCIA',
-    icon: 'edit',
-  },
-  {
-    title: 'Fretamento de Jato Executivo',
-    description:
-      'Fretamento de aeronaves particulares para deslocamento de autoridades em trechos com voos comerciais disponiveis.',
-    costLabel: 'R$ 180.000,00',
-    costUnit: '/hora',
-    equivalence: '1 VOO = 1 AMBULANCIA NOVA',
-    badge: 'VAZAMENTO',
-    icon: 'flight',
-  },
-  {
-    title: 'Reforma de Banheiro Carrara',
-    description:
-      'Reforma completa com marmore carrara importado, loucas de design europeu e metais banhados a ouro.',
-    costLabel: 'R$ 420.000,00',
-    costUnit: '',
-    equivalence: '1 REFORMA = 12 CASAS POPULARES',
-    badge: 'SUPERFATURADO',
-    icon: 'bathroom',
-  },
-  {
-    title: 'Cafeteira Profissional Suica',
-    description:
-      'Equipamento profissional de preparo de cafe com capsulas importadas e contrato de manutencao premium.',
-    costLabel: 'R$ 28.500,00',
-    costUnit: '/unidade',
-    equivalence: '1 CAFE = 5600 MERENDAS ESCOLARES',
-    badge: 'EXTERNO',
-    icon: 'coffee',
-  },
-] as const
+function pickIcon(objeto: string): string {
+  const upper = objeto.toUpperCase()
+  for (const [keyword, icon] of Object.entries(ICON_MAP)) {
+    if (upper.includes(keyword)) return icon
+  }
+  return 'receipt_long'
+}
+
+function pickEquivalence(valor: number): string {
+  const eq = convertToEquivalences(valor)
+  if (eq.ambulanciasUTI >= 1) return `${eq.ambulanciasUTI.toLocaleString('pt-BR')} AMBULANCIA(S) UTI`
+  if (eq.casasPopulares >= 1) return `${eq.casasPopulares.toLocaleString('pt-BR')} CASA(S) POPULAR(ES)`
+  if (eq.consultasSUS >= 1) return `${eq.consultasSUS.toLocaleString('pt-BR')} CONSULTAS SUS`
+  if (eq.cestasBasicas >= 1) return `${eq.cestasBasicas.toLocaleString('pt-BR')} CESTAS BASICAS`
+  if (eq.kitsEscolares >= 1) return `${eq.kitsEscolares.toLocaleString('pt-BR')} KITS ESCOLARES`
+  if (eq.merendas >= 1) return `${eq.merendas.toLocaleString('pt-BR')} MERENDAS ESCOLARES`
+  return `${eq.salariosMinimos.toLocaleString('pt-BR')} SALARIOS MINIMOS`
+}
 
 export default async function CarrinhoPage() {
-  const spendingSummary = await getSpendingData(2025)
+  const year = new Date().getFullYear()
+  const [spendingSummary, { data: contracts, source: contractsSource }] = await Promise.all([
+    getSpendingData(year),
+    getRecentContracts(90),
+  ])
 
-  const isError = spendingSummary.source === 'error'
+  const isSpendingError = spendingSummary.source === 'error'
+  const isContractsError = contractsSource === 'error'
+  const hasContracts = contracts.length > 0
+
+  const topContracts = [...contracts]
+    .sort((a, b) => b.valorFinal - a.valorFinal)
+    .slice(0, 12)
+
+  const totalContratos = contracts.reduce((sum, c) => sum + c.valorFinal, 0)
 
   return (
     <div className="pb-12 lg:pl-8 px-4 md:px-8">
       <section className="bg-primary-container p-8 md:p-12">
         <span className="inline-block bg-on-primary-container text-primary-container font-label text-xs font-bold uppercase tracking-widest px-4 py-1 mb-6">
-          Arquivo Confidencial: #882-G
+          DADOS EM TEMPO REAL — PORTAL DA TRANSPARENCIA
         </span>
         <h1 className="text-5xl md:text-7xl font-black uppercase tracking-tighter font-headline text-on-primary-container">
-          CARRINHO DE COMPRAS DO GOVERNO
+          CONTRATOS DO GOVERNO
         </h1>
         <p className="mt-4 text-lg font-body text-on-primary-container/80 max-w-3xl">
-          Auditoria cidada dos itens de luxo adquiridos com dinheiro publico.
-          Cada produto aqui foi comprado pelo governo federal e esta registrado
-          no Portal da Transparencia ou no Diario Oficial da Uniao.
+          Os maiores contratos federais dos ultimos 90 dias. Todos os valores
+          sao extraidos da API oficial do Portal da Transparencia em tempo real.
         </p>
       </section>
 
       <section className="grid grid-cols-1 md:grid-cols-3 gap-0">
         <div className="p-6 bg-emerald-900">
           <span className="block text-xs uppercase tracking-widest font-label text-yellow-400">
-            Total Pago (2025)
+            Total Pago ({year})
           </span>
           <span className="block text-3xl font-black tracking-tighter font-headline text-white">
-            {isError ? 'INDISPONIVEL' : humanizeNumber(spendingSummary.totalPago)}
+            {isSpendingError ? 'INDISPONIVEL' : humanizeNumber(spendingSummary.totalPago)}
           </span>
         </div>
         <div className="p-6 bg-yellow-400">
           <span className="block text-xs uppercase tracking-widest font-label text-emerald-950">
-            Total Empenhado
+            Contratos Recentes
           </span>
           <span className="block text-3xl font-black tracking-tighter font-headline text-emerald-950">
-            {isError ? 'INDISPONIVEL' : humanizeNumber(spendingSummary.totalEmpenhado)}
+            {isContractsError ? 'INDISPONIVEL' : `${contracts.length} CONTRATOS`}
           </span>
         </div>
         <div className="p-6 bg-surface-container-highest">
           <span className="block text-xs uppercase tracking-widest font-label text-on-surface-variant">
-            Total Liquidado
+            Valor Total Contratos
           </span>
           <span className="block text-3xl font-black tracking-tighter font-headline text-error">
-            {isError ? 'INDISPONIVEL' : humanizeNumber(spendingSummary.totalLiquidado)}
+            {isContractsError ? 'INDISPONIVEL' : humanizeNumber(totalContratos)}
           </span>
         </div>
       </section>
 
-      {isError && (
+      <DataSourceBanner
+        source={isContractsError ? 'error' : contractsSource}
+        updatedAt={spendingSummary.atualizadoEm}
+      />
+
+      {isContractsError && (
         <section className="mt-8">
           <div className="bg-error-container border-2 border-error p-6">
             <div className="flex items-center gap-3">
@@ -134,7 +122,7 @@ export default async function CarrinhoPage() {
                   DADOS EM TEMPO REAL INDISPONIVEIS
                 </h3>
                 <p className="font-body text-sm text-on-error-container/80">
-                  Os valores do Portal da Transparencia nao puderam ser carregados. Os itens abaixo sao baseados em registros publicos.
+                  Nao foi possivel conectar ao Portal da Transparencia. Verifique sua conexao ou tente novamente.
                 </p>
               </div>
             </div>
@@ -142,89 +130,107 @@ export default async function CarrinhoPage() {
         </section>
       )}
 
-      <section className="mt-12">
-        <div className="grid gap-8" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))' }}>
-          {CART_ITEMS.map((item) => (
-            <div
-              key={item.title}
-              className="relative bg-white border-b-[8px] border-primary hard-shadow flex flex-col"
-            >
-              <span
-                className={`absolute top-3 right-3 z-10 font-label text-xs font-black uppercase px-3 py-1 ${BADGE_STYLES[item.badge]}`}
-              >
-                {item.badge}
-              </span>
+      {hasContracts && (
+        <section className="mt-12">
+          <div
+            className="grid gap-8"
+            style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))' }}
+          >
+            {topContracts.map((contrato) => {
+              const equivalence = pickEquivalence(contrato.valorFinal)
+              const icon = pickIcon(contrato.dimCompra?.objeto || '')
+              const objeto = contrato.dimCompra?.objeto || 'Contrato Federal'
+              const fornecedor = contrato.fornecedor?.nome || 'Nao informado'
 
-              <div className="h-48 overflow-hidden bg-surface-container-high flex items-center justify-center">
-                <MaterialIcon
-                  icon={item.icon}
-                  size={64}
-                  className="text-on-surface-variant/40"
-                />
-              </div>
-
-              <div className="p-6 flex flex-col gap-4 flex-1">
-                <h3 className="font-headline font-black text-2xl uppercase">
-                  {item.title}
-                </h3>
-                <p className="font-body text-sm text-on-surface-variant">
-                  {item.description}
-                </p>
-
-                <div className="bg-surface-container-low p-4 mt-auto">
-                  <span className="block text-xs uppercase tracking-widest font-label text-on-surface-variant">
-                    Custo por Unidade
+              return (
+                <div
+                  key={contrato.id}
+                  className="relative bg-white border-b-[8px] border-primary hard-shadow flex flex-col"
+                >
+                  <span className="absolute top-3 right-3 z-10 font-label text-xs font-black uppercase px-3 py-1 bg-secondary-container text-on-secondary-container">
+                    AUDITADO
                   </span>
-                  <span className="block text-2xl font-black font-headline text-error">
-                    {item.costLabel}
-                    {item.costUnit && (
-                      <span className="text-sm font-normal text-on-surface-variant">
-                        {item.costUnit}
+
+                  <div className="h-48 overflow-hidden bg-surface-container-high flex items-center justify-center">
+                    <MaterialIcon icon={icon} size={64} className="text-on-surface-variant/40" />
+                  </div>
+
+                  <div className="p-6 flex flex-col gap-4 flex-1">
+                    <h3 className="font-headline font-black text-xl uppercase leading-tight line-clamp-3">
+                      {objeto}
+                    </h3>
+                    <p className="font-body text-xs text-on-surface-variant uppercase">
+                      {typeof fornecedor === 'string' ? fornecedor : ''}
+                    </p>
+                    <p className="font-label text-xs text-primary font-bold uppercase">
+                      {contrato.unidadeGestora?.orgaoVinculado?.nome || ''}
+                    </p>
+
+                    <div className="bg-surface-container-low p-4 mt-auto">
+                      <span className="block text-xs uppercase tracking-widest font-label text-on-surface-variant">
+                        Valor do Contrato
                       </span>
-                    )}
-                  </span>
-                </div>
+                      <span className="block text-2xl font-black font-headline text-error">
+                        {formatBRL(contrato.valorFinal)}
+                      </span>
+                    </div>
 
-                <div className="bg-secondary-container p-4">
-                  <span className="block text-xs uppercase tracking-widest font-label text-on-secondary-container">
-                    O QUE ISSO COMPRA?
-                  </span>
-                  <span className="block text-base font-bold font-headline text-on-secondary-container">
-                    {item.equivalence}
-                  </span>
+                    <div className="bg-secondary-container p-4">
+                      <span className="block text-xs uppercase tracking-widest font-label text-on-secondary-container">
+                        O QUE ISSO COMPRA?
+                      </span>
+                      <span className="block text-base font-bold font-headline text-on-secondary-container">
+                        {equivalence}
+                      </span>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
+              )
+            })}
+          </div>
+        </section>
+      )}
+
+      {!hasContracts && !isContractsError && (
+        <section className="mt-12 text-center p-12">
+          <MaterialIcon icon="search_off" size={64} className="text-on-surface-variant/30" />
+          <h3 className="font-headline font-black uppercase text-xl mt-4">
+            NENHUM CONTRATO ENCONTRADO
+          </h3>
+          <p className="font-body text-on-surface-variant mt-2">
+            Nao foram encontrados contratos nos ultimos 90 dias para os orgaos consultados.
+          </p>
+        </section>
+      )}
 
       <section className="text-center mt-20">
         <h2 className="text-3xl font-black uppercase font-headline text-on-surface mb-4">
-          Viu algo suspeito no diario oficial?
+          Viu algo suspeito?
         </h2>
         <p className="text-on-surface-variant font-body mb-8 max-w-xl mx-auto">
-          Denuncie gastos abusivos ou compartilhe esta investigacao para que
-          mais brasileiros tenham acesso a verdade.
+          Todos os dados sao publicos e verificaveis no Portal da Transparencia.
+          Compartilhe para que mais brasileiros tenham acesso.
         </p>
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           <a
-            href="/denunciar"
-            className="inline-flex items-center gap-2 bg-error text-on-error font-label font-bold uppercase tracking-wider px-8 py-4 hover:opacity-90 transition-opacity"
+            href="https://portaldatransparencia.gov.br"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 bg-primary text-on-primary font-label font-bold uppercase tracking-wider px-8 py-4"
           >
-            <MaterialIcon icon="campaign" size={20} />
-            DENUNCIAR GASTO
+            <MaterialIcon icon="open_in_new" size={20} />
+            VER NO PORTAL OFICIAL
           </a>
           <a
             href="#compartilhar"
-            className="inline-flex items-center gap-2 bg-secondary-container text-on-secondary-container font-label font-bold uppercase tracking-wider px-8 py-4 hover:opacity-90 transition-opacity"
+            className="inline-flex items-center gap-2 bg-secondary-container text-on-secondary-container font-label font-bold uppercase tracking-wider px-8 py-4"
           >
             <MaterialIcon icon="share" size={20} />
-            COMPARTILHAR O ESCANDALO
+            COMPARTILHAR
           </a>
         </div>
         <p className="mt-8 text-xs font-label text-on-surface-variant uppercase tracking-widest">
-          Fonte: Portal da Transparencia & Diario Oficial da Uniao
+          Fonte: API Portal da Transparencia — Dados Abertos
         </p>
       </section>
     </div>
