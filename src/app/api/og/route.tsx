@@ -3,25 +3,42 @@ import { type NextRequest } from 'next/server'
 
 export const runtime = 'edge'
 
-async function loadFont(url: string): Promise<ArrayBuffer> {
-  const response = await fetch(url)
-  return response.arrayBuffer()
+let fontCache: { epilogue: ArrayBuffer; spaceGrotesk: ArrayBuffer } | null = null
+
+async function loadFonts() {
+  if (fontCache) return fontCache
+
+  const [epilogue, spaceGrotesk] = await Promise.all([
+    fetch(
+      'https://fonts.gstatic.com/s/epilogue/v17/O4ZMFGj5hxF0EhjimlIhqAYaY7EBcUSREF6IHBbCp0WJQ2qdlCYBer8F3vwEKHRIAx8v.woff2',
+    ).then((r) => {
+      if (!r.ok) throw new Error(`Font load failed: ${r.status}`)
+      return r.arrayBuffer()
+    }),
+    fetch(
+      'https://fonts.gstatic.com/s/spacegrotesk/v16/V8mDoQDjQSkFtoMM3T6r8E7mPbF4Cw.woff2',
+    ).then((r) => {
+      if (!r.ok) throw new Error(`Font load failed: ${r.status}`)
+      return r.arrayBuffer()
+    }),
+  ])
+
+  fontCache = { epilogue, spaceGrotesk }
+  return fontCache
 }
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams
-  const valor = searchParams.get('valor') ?? 'R$ 1.500.000,00'
-  const item = searchParams.get('item') ?? 'Gasto Público'
-  const equivalencia = searchParams.get('equivalencia') ?? '6.000 consultas SUS'
+  const valor = (searchParams.get('valor') ?? 'R$ 1.500.000,00').slice(0, 50)
+  const item = (searchParams.get('item') ?? 'Gasto Publico').slice(0, 80)
+  const equivalencia = (searchParams.get('equivalencia') ?? '6.000 consultas SUS').slice(0, 80)
 
-  const [epilogueBold, spaceGroteskMedium] = await Promise.all([
-    loadFont(
-      'https://fonts.gstatic.com/s/epilogue/v17/O4ZMFGj5hxF0EhjimlIhqAYaY7EBcUSREF6IHBbCp0WJQ2qdlCYBer8F3vwEKHRIAx8v.woff2'
-    ),
-    loadFont(
-      'https://fonts.gstatic.com/s/spacegrotesk/v16/V8mDoQDjQSkFtoMM3T6r8E7mPbF4Cw.woff2'
-    ),
-  ])
+  let fonts: { epilogue: ArrayBuffer; spaceGrotesk: ArrayBuffer }
+  try {
+    fonts = await loadFonts()
+  } catch {
+    return new Response('Font loading failed', { status: 502 })
+  }
 
   return new ImageResponse(
     (
@@ -65,7 +82,7 @@ export async function GET(request: NextRequest) {
               fontFamily: 'Space Grotesk',
             }}
           >
-            PORTAL DA TRANSPARÊNCIA
+            PORTAL DA TRANSPARENCIA
           </span>
         </div>
 
@@ -169,7 +186,7 @@ export async function GET(request: NextRequest) {
               fontFamily: 'Epilogue',
             }}
           >
-            A VERDADE QUE NÃO TE CONTAM
+            DADOS DO PORTAL DA TRANSPARENCIA
           </span>
         </div>
       </div>
@@ -180,15 +197,15 @@ export async function GET(request: NextRequest) {
       fonts: [
         {
           name: 'Epilogue',
-          data: epilogueBold,
-          style: 'normal',
-          weight: 900,
+          data: fonts.epilogue,
+          style: 'normal' as const,
+          weight: 900 as const,
         },
         {
           name: 'Space Grotesk',
-          data: spaceGroteskMedium,
-          style: 'normal',
-          weight: 500,
+          data: fonts.spaceGrotesk,
+          style: 'normal' as const,
+          weight: 500 as const,
         },
       ],
     },

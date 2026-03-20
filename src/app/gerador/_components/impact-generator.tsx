@@ -4,16 +4,19 @@ import { useState, useCallback } from 'react'
 import { MaterialIcon } from '@/components/icons/material-icon'
 import { formatBRL } from '@/lib/utils/format'
 import { convertToEquivalences, type Equivalences } from '@/lib/utils/equivalences'
+import { shareOnWhatsApp, downloadOgImage } from '@/lib/utils/share'
 
-const SPENDING_OPTIONS = [
-  { value: 'moveis', label: 'Móveis de Luxo' },
-  { value: 'viagem', label: 'Viagem Presidencial' },
-  { value: 'cartao', label: 'Cartão Corporativo' },
-  { value: 'propaganda', label: 'Propaganda Oficial' },
-  { value: 'reforma', label: 'Reforma de Gabinete' },
-] as const
+interface RealDataItem {
+  readonly label: string
+  readonly value: number
+  readonly formatted: string
+  readonly orgao?: string
+}
 
-type SpendingType = typeof SPENDING_OPTIONS[number]['value']
+interface ImpactGeneratorProps {
+  readonly realOrgaos: readonly RealDataItem[]
+  readonly realContracts: readonly RealDataItem[]
+}
 
 type ComparisonKey = 'saude' | 'educacao' | 'moradia'
 
@@ -27,14 +30,14 @@ interface ComparisonOption {
 const COMPARISON_OPTIONS: readonly ComparisonOption[] = [
   {
     key: 'saude',
-    label: 'Saúde Pública',
+    label: 'Saude Publica',
     icon: 'local_hospital',
     getLabel: (eq) =>
       `${eq.consultasSUS.toLocaleString('pt-BR')} consultas no SUS`,
   },
   {
     key: 'educacao',
-    label: 'Educação',
+    label: 'Educacao',
     icon: 'school',
     getLabel: (eq) =>
       `${eq.kitsEscolares.toLocaleString('pt-BR')} kits escolares`,
@@ -48,194 +51,277 @@ const COMPARISON_OPTIONS: readonly ComparisonOption[] = [
   },
 ] as const
 
+const MAX_VALUE = 10_000_000_000_000
 
 function parseMoneyInput(raw: string): number {
   const cleaned = raw.replace(/[^\d,]/g, '').replace(',', '.')
   const parsed = parseFloat(cleaned)
-  return Number.isNaN(parsed) ? 0 : parsed
+  if (Number.isNaN(parsed) || parsed < 0) return 0
+  return Math.min(parsed, MAX_VALUE)
 }
 
-export function ImpactGenerator() {
-  const [item, setItem] = useState<SpendingType>('moveis')
+export function ImpactGenerator({ realOrgaos, realContracts }: ImpactGeneratorProps) {
+  const [itemLabel, setItemLabel] = useState('Gasto Publico')
   const [rawValue, setRawValue] = useState('1.500.000,00')
   const [comparison, setComparison] = useState<ComparisonKey>('saude')
+  const [isDownloading, setIsDownloading] = useState(false)
 
-  const [previewItem, setPreviewItem] = useState('Móveis de Luxo')
-  const [previewValue, setPreviewValue] = useState(1_500_000)
-  const [previewComparison, setPreviewComparison] = useState<ComparisonKey>('saude')
-
-  const equivalences = convertToEquivalences(previewValue)
-  const activeComparison = COMPARISON_OPTIONS.find((c) => c.key === previewComparison)
+  const numericValue = parseMoneyInput(rawValue)
+  const equivalences = convertToEquivalences(numericValue)
+  const activeComparison = COMPARISON_OPTIONS.find((c) => c.key === comparison)
   const equivalenceText = activeComparison?.getLabel(equivalences) ?? ''
+  const valorFormatted = formatBRL(numericValue)
 
-  const handleUpdate = useCallback(() => {
-    const selectedOption = SPENDING_OPTIONS.find((o) => o.value === item)
-    setPreviewItem(selectedOption?.label ?? 'Gasto Público')
-    setPreviewValue(parseMoneyInput(rawValue))
-    setPreviewComparison(comparison)
-  }, [item, rawValue, comparison])
+  const selectRealData = useCallback((item: RealDataItem) => {
+    setItemLabel(item.label)
+    setRawValue(item.value.toLocaleString('pt-BR', { minimumFractionDigits: 2 }))
+  }, [])
+
+  const handleDownload = useCallback(async () => {
+    setIsDownloading(true)
+    try {
+      const params = new URLSearchParams({
+        valor: valorFormatted,
+        item: itemLabel,
+        equivalencia: equivalenceText,
+      })
+      await downloadOgImage(`/api/og?${params.toString()}`)
+    } catch {
+      // Silently fail — user can screenshot instead
+    } finally {
+      setIsDownloading(false)
+    }
+  }, [valorFormatted, itemLabel, equivalenceText])
+
+  const handleWhatsApp = useCallback(() => {
+    const text = `Voce sabia? O governo gastou ${valorFormatted} com ${itemLabel}. Isso daria pra pagar ${equivalenceText}. Dados do Portal da Transparencia.`
+    const origin = window.location.origin
+    shareOnWhatsApp(text, `${origin}/gerador`)
+  }, [valorFormatted, itemLabel, equivalenceText])
+
+  const hasRealData = realOrgaos.length > 0 || realContracts.length > 0
 
   return (
-    <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
-      <div className="xl:col-span-5 bg-surface-container-low p-8 hard-shadow order-last xl:order-first">
-        <div className="flex items-center gap-3 mb-8">
-          <div className="w-1.5 h-10 bg-primary" />
-          <h2 className="text-2xl font-black uppercase font-headline">
-            Configure o Flagrante
+    <div className="flex flex-col gap-8">
+      {/* REAL DATA CARDS */}
+      {hasRealData && (
+        <section>
+          <h2 className="font-headline font-black uppercase text-xl tracking-tighter text-on-surface mb-2">
+            DADOS REAIS DO GOVERNO
           </h2>
+          <p className="font-body text-sm text-on-surface-variant mb-4">
+            Clique em um item para gerar o card automaticamente com dados oficiais.
+          </p>
+
+          {realOrgaos.length > 0 && (
+            <div className="mb-4">
+              <span className="block text-xs uppercase tracking-widest font-label text-on-surface-variant mb-2">
+                Maiores orgaos por gasto
+              </span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                {realOrgaos.map((orgao) => (
+                  <button
+                    key={`${orgao.label}-${orgao.value}`}
+                    type="button"
+                    onClick={() => selectRealData(orgao)}
+                    className="bg-white border-2 border-outline-variant p-4 text-left hover:border-primary hover:bg-primary/5 transition-colors"
+                  >
+                    <span className="block font-label text-xs uppercase tracking-wider text-on-surface-variant">
+                      {orgao.label}
+                    </span>
+                    <span className="block font-headline font-black text-lg text-on-surface mt-1">
+                      {orgao.formatted}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {realContracts.length > 0 && (
+            <div>
+              <span className="block text-xs uppercase tracking-widest font-label text-on-surface-variant mb-2">
+                Maiores contratos recentes
+              </span>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {realContracts.map((contract) => (
+                  <button
+                    key={`${contract.label}-${contract.value}`}
+                    type="button"
+                    onClick={() => selectRealData(contract)}
+                    className="bg-white border-2 border-outline-variant p-4 text-left hover:border-primary hover:bg-primary/5 transition-colors"
+                  >
+                    <span className="block font-label text-xs uppercase tracking-wider text-on-surface-variant line-clamp-1">
+                      {contract.label}
+                    </span>
+                    <span className="block font-headline font-black text-lg text-error mt-1">
+                      {contract.formatted}
+                    </span>
+                    {contract.orgao && (
+                      <span className="block font-body text-xs text-on-surface-variant mt-1 line-clamp-1">
+                        {contract.orgao}
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </section>
+      )}
+
+      {/* MANUAL FORM + PREVIEW */}
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
+        {/* FORM */}
+        <div className="xl:col-span-5 bg-surface-container-low p-8 hard-shadow order-last xl:order-first">
+          <div className="flex items-center gap-3 mb-8">
+            <div className="w-1.5 h-10 bg-primary" />
+            <h2 className="text-2xl font-black uppercase font-headline">
+              Monte seu card
+            </h2>
+          </div>
+
+          <div className="flex flex-col gap-6">
+            <div>
+              <label
+                htmlFor="item-label"
+                className="block text-xs uppercase tracking-widest font-label text-on-surface-variant mb-2"
+              >
+                Nome do gasto
+              </label>
+              <input
+                id="item-label"
+                type="text"
+                value={itemLabel}
+                onChange={(e) => setItemLabel(e.target.value)}
+                className="w-full bg-white border-2 border-outline-variant p-3 font-label text-sm focus:border-primary focus:outline-none"
+                placeholder="Ex: Reforma de gabinete"
+              />
+            </div>
+
+            <div>
+              <label
+                htmlFor="spending-value"
+                className="block text-xs uppercase tracking-widest font-label text-on-surface-variant mb-2"
+              >
+                Valor (R$)
+              </label>
+              <input
+                id="spending-value"
+                type="text"
+                value={rawValue}
+                onChange={(e) => setRawValue(e.target.value)}
+                className="w-full bg-white border-2 border-outline-variant p-3 font-label text-sm focus:border-primary focus:outline-none"
+                placeholder="1.500.000,00"
+              />
+            </div>
+
+            <div>
+              <span className="block text-xs uppercase tracking-widest font-label text-on-surface-variant mb-3">
+                Comparar com
+              </span>
+              <div className="flex flex-col gap-2">
+                {COMPARISON_OPTIONS.map((option) => (
+                  <button
+                    key={option.key}
+                    type="button"
+                    onClick={() => setComparison(option.key)}
+                    className={`flex items-center gap-3 p-3 border-l-4 text-left transition-colors ${
+                      comparison === option.key
+                        ? 'border-secondary bg-secondary-container/30'
+                        : 'border-outline-variant bg-white hover:bg-surface-container'
+                    }`}
+                  >
+                    <MaterialIcon icon={option.icon} size={20} />
+                    <span className="font-label text-sm font-medium uppercase">
+                      {option.label}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div className="flex flex-col gap-6">
-          <div>
-            <label
-              htmlFor="spending-item"
-              className="block text-xs uppercase tracking-widest font-label text-on-surface-variant mb-2"
-            >
-              Item do Gasto
-            </label>
-            <select
-              id="spending-item"
-              value={item}
-              onChange={(e) => setItem(e.target.value as SpendingType)}
-              className="w-full bg-white border-2 border-outline-variant p-3 font-label text-sm uppercase focus:border-primary focus:outline-none"
-            >
-              {SPENDING_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </div>
+        {/* PREVIEW + ACTIONS */}
+        <div className="xl:col-span-7 flex flex-col items-center gap-8 order-first xl:order-last">
+          {/* Card Preview */}
+          <div className="relative max-w-[600px] w-full aspect-[1200/630] bg-white hard-shadow flex flex-col overflow-hidden">
+            <div className="bg-emerald-800 px-6 py-4 flex items-center justify-between">
+              <span className="font-headline font-black text-white text-lg uppercase tracking-wider">
+                RAIO-X DO GOVERNO
+              </span>
+              <span className="font-label text-xs text-emerald-300 uppercase tracking-widest">
+                PORTAL DA TRANSPARENCIA
+              </span>
+            </div>
 
-          <div>
-            <label
-              htmlFor="spending-value"
-              className="block text-xs uppercase tracking-widest font-label text-on-surface-variant mb-2"
-            >
-              Valor Total (R$)
-            </label>
-            <input
-              id="spending-value"
-              type="text"
-              value={rawValue}
-              onChange={(e) => setRawValue(e.target.value)}
-              className="w-full bg-white border-2 border-outline-variant p-3 font-label text-sm focus:border-primary focus:outline-none"
-              placeholder="1.500.000,00"
-            />
-          </div>
+            <div className="flex-1 flex flex-col items-center justify-center px-8 py-6 text-center">
+              <span className="font-label text-xs uppercase tracking-widest text-on-surface-variant mb-2">
+                {itemLabel}
+              </span>
+              <span className="text-4xl md:text-5xl font-black font-headline text-error tracking-tighter">
+                {valorFormatted}
+              </span>
+              <div className="w-full border-t-8 border-yellow-400 mt-4 pt-4">
+                <span className="block font-label text-xs uppercase tracking-widest text-on-surface-variant mb-1">
+                  O QUE ISSO REPRESENTA
+                </span>
+                <span className="block text-xl md:text-2xl font-black font-headline uppercase text-primary">
+                  {equivalenceText}
+                </span>
+              </div>
+            </div>
 
-          <div>
-            <span className="block text-xs uppercase tracking-widest font-label text-on-surface-variant mb-3">
-              Comparar com
-            </span>
-            <div className="flex flex-col gap-2">
-              {COMPARISON_OPTIONS.map((option) => (
-                <button
-                  key={option.key}
-                  type="button"
-                  onClick={() => setComparison(option.key)}
-                  className={`flex items-center gap-3 p-3 border-l-4 text-left transition-colors ${
-                    comparison === option.key
-                      ? 'border-secondary bg-secondary-container/30'
-                      : 'border-outline-variant bg-white hover:bg-surface-container'
-                  }`}
-                >
-                  <MaterialIcon icon={option.icon} size={20} />
-                  <span className="font-label text-sm font-medium uppercase">
-                    {option.label}
-                  </span>
-                </button>
-              ))}
+            <div className="bg-emerald-900 px-6 py-3 flex items-center justify-between">
+              <span className="font-label text-xs text-emerald-400 uppercase tracking-widest">
+                raioxdogoverno.com.br
+              </span>
+              <span className="font-headline font-black text-yellow-400 text-xs uppercase">
+                DADOS DO PORTAL DA TRANSPARENCIA
+              </span>
             </div>
           </div>
 
-          <button
-            type="button"
-            onClick={handleUpdate}
-            className="w-full bg-secondary-container text-on-secondary-container font-label font-bold uppercase tracking-wider py-4 hover:opacity-90 transition-opacity mt-2"
-          >
-            ATUALIZAR PREVIEW
-          </button>
+          {/* Action Buttons */}
+          <div className="flex flex-col sm:flex-row items-center gap-4 w-full max-w-[600px]">
+            <button
+              type="button"
+              onClick={handleDownload}
+              disabled={isDownloading}
+              className="flex-1 w-full inline-flex items-center justify-center gap-2 bg-primary text-on-primary font-label font-bold uppercase tracking-wider py-4 hover:opacity-90 transition-opacity disabled:opacity-50"
+            >
+              <MaterialIcon icon={isDownloading ? 'hourglass_empty' : 'download'} size={20} />
+              {isDownloading ? 'GERANDO...' : 'BAIXAR IMAGEM'}
+            </button>
+            <button
+              type="button"
+              onClick={handleWhatsApp}
+              className="flex-1 w-full inline-flex items-center justify-center gap-2 text-white font-label font-bold uppercase tracking-wider py-4 hover:opacity-90 transition-opacity"
+              style={{ backgroundColor: '#25D366' }}
+            >
+              <MaterialIcon icon="share" size={20} />
+              COMPARTILHAR NO WHATSAPP
+            </button>
+          </div>
         </div>
       </div>
 
-      <div className="xl:col-span-7 flex flex-col items-center gap-8 order-first xl:order-last">
-        <div className="relative max-w-[600px] w-full aspect-square bg-white hard-shadow flex flex-col overflow-hidden">
-          <div className="bg-emerald-800 px-6 py-4 flex items-center justify-between">
-            <span className="font-headline font-black text-white text-lg uppercase tracking-wider">
-              RAIO-X DO GOVERNO
-            </span>
-            <span className="font-label text-xs text-emerald-300 uppercase tracking-widest">
-              ORIGEM: PORTAL DA TRANSPARÊNCIA
-            </span>
-          </div>
-
-          <div className="flex-1 flex flex-col items-center justify-center px-8 py-6 text-center">
-            <span className="font-label text-xs uppercase tracking-widest text-on-surface-variant mb-2">
-              {previewItem}
-            </span>
-            <span className="text-5xl md:text-6xl font-black font-headline text-error tracking-tighter">
-              {formatBRL(previewValue)}
-            </span>
-            <div className="w-full border-t-8 border-yellow-400 mt-6 pt-6">
-              <span className="block font-label text-xs uppercase tracking-widest text-on-surface-variant mb-1">
-                O QUE ISSO REPRESENTA
-              </span>
-              <span className="block text-2xl md:text-3xl font-black font-headline uppercase text-primary">
-                {equivalenceText}
-              </span>
-            </div>
-          </div>
-
-          <div className="bg-emerald-900 px-6 py-3 flex items-center justify-between">
-            <span className="font-label text-xs text-emerald-400 uppercase tracking-widest">
-              raioxdogoverno.com.br
-            </span>
-            <span className="font-headline font-black text-yellow-400 text-xs uppercase">
-              A VERDADE QUE NÃO TE CONTAM
-            </span>
-          </div>
-
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 -rotate-12 pointer-events-none select-none">
-            <span className="block border-8 border-error text-error font-headline font-black text-4xl uppercase px-6 py-2 opacity-30">
-              AUDITADO
-            </span>
-          </div>
-        </div>
-
-        <div className="flex flex-col sm:flex-row items-center gap-4 w-full max-w-[600px]">
-          <button
-            type="button"
-            className="flex-1 w-full inline-flex items-center justify-center gap-2 bg-primary text-on-primary font-label font-bold uppercase tracking-wider py-4 hover:opacity-90 transition-opacity"
-          >
-            <MaterialIcon icon="download" size={20} />
-            BAIXAR IMAGEM
-          </button>
-          <button
-            type="button"
-            className="flex-1 w-full inline-flex items-center justify-center gap-2 text-white font-label font-bold uppercase tracking-wider py-4 hover:opacity-90 transition-opacity"
-            style={{ backgroundColor: '#25D366' }}
-          >
-            <MaterialIcon icon="share" size={20} />
-            ZAPEAR VERDADE
-          </button>
-        </div>
-      </div>
-
-      <div className="xl:col-span-12 mt-12 bg-surface-container-low p-8 hard-shadow">
+      {/* HOW IT WORKS */}
+      <div className="mt-12 bg-surface-container-low p-8 hard-shadow">
         <div className="flex items-center gap-3 mb-4">
           <MaterialIcon icon="info" size={24} className="text-primary" />
           <h3 className="text-xl font-black uppercase font-headline">
-            Como Funciona
+            Como funciona
           </h3>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="flex flex-col gap-2">
             <span className="font-label text-xs uppercase tracking-widest text-on-surface-variant">
-              1. CONFIGURE
+              1. ESCOLHA UM GASTO
             </span>
             <p className="font-body text-sm text-on-surface-variant">
-              Escolha o tipo de gasto e insira o valor encontrado no Portal da Transparencia.
+              Clique em um dado real do governo acima, ou digite um valor manualmente.
             </p>
           </div>
           <div className="flex flex-col gap-2">
@@ -243,7 +329,7 @@ export function ImpactGenerator() {
               2. COMPARE
             </span>
             <p className="font-body text-sm text-on-surface-variant">
-              Selecione a area de comparacao: saude, educacao ou moradia popular.
+              Escolha com que area comparar: saude, educacao ou moradia popular.
             </p>
           </div>
           <div className="flex flex-col gap-2">
@@ -251,7 +337,7 @@ export function ImpactGenerator() {
               3. COMPARTILHE
             </span>
             <p className="font-body text-sm text-on-surface-variant">
-              Baixe o card gerado e compartilhe nas redes sociais para informar mais pessoas.
+              Baixe a imagem ou mande direto pro WhatsApp dos seus amigos.
             </p>
           </div>
         </div>

@@ -11,10 +11,10 @@ interface BottomNavItem {
 }
 
 const NAV_ITEMS: readonly BottomNavItem[] = [
-  { href: '/', icon: 'home', label: 'Início' },
-  { href: '/carrinho', icon: 'payments', label: 'Gastos' },
+  { href: '/', icon: 'home', label: 'Inicio' },
   { href: '/ranking', icon: 'leaderboard', label: 'Ranking' },
-  { href: '/gerador', icon: 'folder_shared', label: 'Dossiês' },
+  { href: '/politicos', icon: 'how_to_reg', label: 'Politicos' },
+  { href: '/gerador', icon: 'bolt', label: 'Gerador' },
 ]
 
 function isActive(pathname: string, href: string): boolean {

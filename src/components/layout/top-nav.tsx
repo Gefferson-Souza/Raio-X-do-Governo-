@@ -7,6 +7,7 @@ import { MaterialIcon } from "@/components/icons/material-icon"
 const NAV_LINKS = [
   { href: "/carrinho", label: "GASTOS REAIS" },
   { href: "/ranking", label: "RANKING" },
+  { href: "/politicos", label: "POLITICOS" },
   { href: "/gerador", label: "GERADOR DE IMPACTO" },
 ] as const
 

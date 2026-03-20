@@ -6,8 +6,9 @@ import { MaterialIcon } from "@/components/icons/material-icon"
 
 const NAV_ITEMS = [
   { href: "/", icon: "home", label: "Painel da Verdade" },
-  { href: "/ranking", icon: "leaderboard", label: "Ranking da Farra" },
-  { href: "/carrinho", icon: "shopping_cart", label: "Carrinho de Compras" },
+  { href: "/ranking", icon: "leaderboard", label: "Ranking de Gastos" },
+  { href: "/politicos", icon: "how_to_reg", label: "Politicos" },
+  { href: "/carrinho", icon: "shopping_cart", label: "Contratos" },
   { href: "/gerador", icon: "bolt", label: "Gerador de Impacto" },
 ] as const
 

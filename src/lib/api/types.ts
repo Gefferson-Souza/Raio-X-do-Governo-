@@ -71,6 +71,64 @@ export interface EmpresaSancionada {
   }
 }
 
+export interface EmendaParlamentar {
+  codigoEmenda: string
+  ano: number
+  tipoEmenda: string
+  autor: string
+  localidadeDoGasto: string
+  funcaoEmenda: string
+  subfuncaoEmenda: string
+  valorEmpenhado: number
+  valorLiquidado: number
+  valorPago: number
+}
+
+export interface ViagemOficial {
+  id: number
+  situacao: string
+  viajante: string
+  cargo: string
+  orgaoSuperior: string
+  dataInicio: string
+  dataFim: string
+  destinos: string
+  motivo: string
+  valorPassagens: number
+  valorDiarias: number
+  valorTotal: number
+}
+
+export interface CartaoPagamento {
+  id: number
+  cpfPortador: string
+  nomePortador: string
+  unidadeGestora: string
+  orgaoSuperior: string
+  dataTransacao: string
+  valorTransacao: number
+  tipoCartao: string
+}
+
+export interface ServidorRemuneracao {
+  id: number
+  nome: string
+  cpf: string
+  orgaoServidorExercicio: string
+  orgaoSuperiorServidorExercicio: string
+  funcao: string
+  cargo: string
+  remuneracaoBasicaBruta: number
+  gratificacaoNatalina: number
+  ferias: number
+  outrasRemuneracoes: number
+  irrf: number
+  pssSeguridadeSocial: number
+  demaisDeducoes: number
+  remuneracaoAposDeducoes: number
+  mesAno: string
+}
+
 export interface SpendingSummary {
   totalPago: number
   totalEmpenhado: number
