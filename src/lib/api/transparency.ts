@@ -139,7 +139,7 @@ export async function fetchDespesasPorOrgao(
 ): Promise<DespesaPorOrgao[]> {
   const rawList = await apiGet<DespesaPorOrgaoRaw[]>('/despesas/por-orgao', {
     ano,
-    codigoOrgaoSuperior,
+    orgaoSuperior: codigoOrgaoSuperior,
     pagina,
   })
   return rawList.map(transformDespesa)

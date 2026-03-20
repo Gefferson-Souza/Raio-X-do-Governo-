@@ -22,27 +22,37 @@ export interface DespesaPorOrgao {
 
 export interface Contrato {
   id: number
+  numero: string
+  objeto: string
+  situacaoContrato: string
   dataAssinatura: string
   dataFimVigencia: string
   dataInicioVigencia: string
-  dimCompra: {
+  compra: {
     numero: string
     objeto: string
   }
   fornecedor: {
-    cnpjCpf: string
+    id: number
     nome: string
+    cnpjFormatado: string
+    tipo: string
   }
   unidadeGestora: {
     codigo: string
     nome: string
     orgaoVinculado: {
+      nome: string
+      sigla: string
+    }
+    orgaoMaximo: {
       codigo: string
       nome: string
+      sigla: string
     }
   }
-  valorFinal: number
-  valorInicial: number
+  valorInicialCompra: number
+  valorFinalCompra: number
 }
 
 export interface EmpresaSancionada {
