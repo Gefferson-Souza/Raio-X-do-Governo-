@@ -8,7 +8,13 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest",
-    "test:run": "vitest run"
+    "test:run": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "sonar:up": "docker compose -f docker-compose.sonar.yml up -d",
+    "sonar:down": "docker compose -f docker-compose.sonar.yml down",
+    "sonar:clean": "docker compose -f docker-compose.sonar.yml down -v",
+    "sonar:scan": "export $(cat .env.sonar | xargs) && docker run --rm --network sonar-net -e SONAR_TOKEN -v \"$(pwd):/usr/src\" sonarsource/sonar-scanner-cli -Dsonar.token=$SONAR_TOKEN",
+    "sonar:check": "npm run test:coverage && npm run sonar:scan"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.91.2",
@@ -28,6 +34,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@vitejs/plugin-react": "^6.0.1",
+    "@vitest/coverage-v8": "^4.1.0",
     "eslint": "^9",
     "eslint-config-next": "16.2.0",
     "jsdom": "^29.0.0",

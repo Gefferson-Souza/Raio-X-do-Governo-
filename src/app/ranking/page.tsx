@@ -1,10 +1,9 @@
 import { getSpendingData } from '@/lib/services/spending-service'
 import { getRecentContracts } from '@/lib/services/contracts-service'
-import { humanizeNumber } from '@/lib/utils/format'
+import { humanizeNumber, formatDateBR } from '@/lib/utils/format'
 import { convertToEquivalences } from '@/lib/utils/equivalences'
 import { PodiumCard } from '@/components/ui/podium-card'
 import { TimelineRow } from '@/components/ui/timeline-row'
-import { Badge } from '@/components/ui/badge'
 import { MaterialIcon } from '@/components/icons/material-icon'
 import Link from 'next/link'
 
@@ -44,26 +43,6 @@ function pickOrgaoCategory(nomeOrgao: string): string {
   return 'ADMINISTRACAO FEDERAL'
 }
 
-function computePercentual(valorPago: number, valorEmpenhado: number): number {
-  if (valorEmpenhado <= 0) {
-    return 0
-  }
-  return Math.round((valorPago / valorEmpenhado) * 100)
-}
-
-function formatDateBR(isoDate: string): string {
-  try {
-    const date = new Date(isoDate)
-    return date.toLocaleDateString('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-    })
-  } catch {
-    return isoDate
-  }
-}
-
 function formatTimeBR(isoDate: string): string {
   try {
     const date = new Date(isoDate)
@@ -76,11 +55,11 @@ function formatTimeBR(isoDate: string): string {
   }
 }
 
-const TIMELINE_STATUSES = ['pago', 'auditado', 'pendente', 'suspeito'] as const
+const TIMELINE_STATUSES = ['pago', 'auditado', 'pendente'] as const
 
 export default async function RankingPage() {
   const [spendingSummary, contractsResult] = await Promise.all([
-    getSpendingData(2026),
+    getSpendingData(new Date().getFullYear()),
     getRecentContracts(30),
   ])
 
@@ -115,7 +94,7 @@ export default async function RankingPage() {
 
         <h2 className="font-headline font-black italic uppercase text-6xl md:text-8xl leading-none tracking-tighter text-white">
           RANKING<br />
-          DA <span className="text-secondary-container">FARRA</span>
+          DE <span className="text-secondary-container">GASTOS</span>
         </h2>
 
         <p className="mt-4 font-body italic text-lg text-white/70 max-w-2xl">
@@ -126,7 +105,7 @@ export default async function RankingPage() {
         <div className="mt-6 flex flex-wrap items-center gap-4 text-white/50 font-label text-xs uppercase tracking-widest">
           <span>FONTE: PORTAL DA TRANSPARENCIA</span>
           <span className="w-1 h-1 bg-white/30" />
-          <span>DADOS DE 2025</span>
+          <span>DADOS DE {new Date().getFullYear()}</span>
           <span className="w-1 h-1 bg-white/30" />
           <span>ATUALIZADO EM {formatDateBR(spendingSummary.atualizadoEm)}</span>
         </div>
@@ -211,88 +190,88 @@ export default async function RankingPage() {
         </section>
       )}
 
-      {/* MENCOES DESONROSAS */}
+      {/* ORGAOS COM DINHEIRO PARADO */}
       {!isSpendingError && remainingOrgaos.length > 0 && (
         <section className="px-6 lg:px-12 py-10 bg-surface-container-low">
-          <span className="inline-block bg-error text-on-error px-3 py-1 font-label text-xs font-bold uppercase tracking-widest mb-4">
-            VERGONHA NACIONAL
+          <span className="inline-block bg-yellow-400 text-yellow-950 px-3 py-1 font-label text-xs font-bold uppercase tracking-widest mb-4">
+            ONDE SOBROU DINHEIRO?
           </span>
-          <h3 className="font-headline font-black uppercase text-3xl tracking-tighter text-on-surface mb-8">
-            MENCOES DESONROSAS
+          <h3 className="font-headline font-black uppercase text-3xl tracking-tighter text-on-surface mb-2">
+            ORGAOS COM DINHEIRO PARADO
           </h3>
+          <p className="font-body text-sm text-on-surface-variant mb-8">
+            Estes orgaos reservaram dinheiro no orcamento, mas nao gastaram tudo.
+            Isso pode significar projetos atrasados, burocracia ou economia de recursos.
+          </p>
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            {/* 2-col featured card */}
-            {remainingOrgaos[0] && (
-              <div className="md:col-span-2 bg-white border-l-8 border-error hard-shadow p-8 flex flex-col gap-4">
-                <Badge variant="suspeito" />
-                <span className="inline-block bg-error-container text-white px-3 py-1 font-label text-xs font-bold uppercase tracking-widest w-fit">
-                  ALERTA DE DESVIO
-                </span>
-                <h4 className="font-headline font-black uppercase text-2xl tracking-tighter text-on-surface">
-                  {remainingOrgaos[0].orgao}
-                </h4>
-                <p className="font-body text-sm text-on-surface-variant italic">
-                  Gasto de {humanizeNumber(remainingOrgaos[0].pago)} com apenas{' '}
-                  {computePercentual(remainingOrgaos[0].pago, remainingOrgaos[0].empenhado)}% de execucao
-                  orcamentaria. Valores que precisam de explicacao.
-                </p>
-                <div className="mt-auto pt-4 border-t border-outline-variant flex items-center justify-between">
-                  <span className="text-3xl font-black font-headline tracking-tighter text-error">
-                    {humanizeNumber(remainingOrgaos[0].pago)}
-                  </span>
-                  <span className="text-xs font-bold uppercase font-label text-on-surface-variant">
-                    EMPENHADO: {humanizeNumber(remainingOrgaos[0].empenhado)}
-                  </span>
+          <div className="flex flex-col gap-4">
+            {remainingOrgaos.map((orgao) => {
+              const sobra = orgao.empenhado - orgao.pago
+              const percentGasto = orgao.empenhado > 0
+                ? Math.round((orgao.pago / orgao.empenhado) * 100)
+                : 0
+
+              return (
+                <div
+                  key={orgao.codigoOrgao}
+                  className="bg-white border-2 border-outline-variant p-6"
+                >
+                  <h4 className="font-headline font-black uppercase text-xl tracking-tight text-on-surface">
+                    {orgao.orgao}
+                  </h4>
+                  <p className="font-body text-sm text-on-surface-variant mt-2 leading-relaxed">
+                    Reservou {humanizeNumber(orgao.empenhado)} para gastar, mas so
+                    usou {humanizeNumber(orgao.pago)}.
+                    {sobra > 0 && (
+                      <> Sobraram {humanizeNumber(sobra)} parados. O que aconteceu com esse dinheiro?</>
+                    )}
+                  </p>
+
+                  <div className="mt-4">
+                    <div className="flex justify-between text-xs font-label uppercase tracking-wider text-on-surface-variant mb-1">
+                      <span>Pago: {humanizeNumber(orgao.pago)}</span>
+                      <span>{percentGasto}% do reservado</span>
+                    </div>
+                    <div
+                      role="progressbar"
+                      aria-valuenow={percentGasto}
+                      aria-valuemin={0}
+                      aria-valuemax={100}
+                      aria-label={`Execucao: ${percentGasto}% do orcamento reservado`}
+                      className="h-3 bg-surface-container-highest rounded-full overflow-hidden"
+                    >
+                      <div
+                        className="h-full bg-primary rounded-full transition-all duration-500"
+                        style={{ width: `${Math.min(percentGasto, 100)}%` }}
+                      />
+                    </div>
+                  </div>
                 </div>
-              </div>
-            )}
+              )
+            })}
+          </div>
 
-            {/* 2 small 1-col cards */}
-            {remainingOrgaos.slice(1, 3).map((orgao, index) => (
-              <div
-                key={orgao.codigoOrgao}
-                className="bg-white border-t-4 border-secondary hard-shadow p-6 flex flex-col gap-3"
-              >
-                <span className="text-xs font-bold uppercase font-label text-on-surface-variant tracking-widest">
-                  #{index + 5}o LUGAR
-                </span>
-                <h4 className="font-headline font-black uppercase text-base tracking-tight text-on-surface">
-                  {orgao.orgao}
-                </h4>
-                <span className="text-2xl font-black font-headline tracking-tighter text-on-surface">
-                  {humanizeNumber(orgao.pago)}
-                </span>
-                <div className="mt-auto pt-3 border-t border-outline-variant">
-                  <span className="text-xs font-bold uppercase font-label text-on-surface-variant">
-                    EXECUCAO: {computePercentual(orgao.pago, orgao.empenhado)}%
-                  </span>
-                </div>
-              </div>
-            ))}
-
-            {/* Full-width CTA card */}
-            <div className="md:col-span-4 bg-emerald-900 p-8 flex flex-col md:flex-row items-center justify-between gap-6">
-              <div className="flex flex-col gap-2">
-                <h4 className="font-headline font-black uppercase text-2xl tracking-tighter text-white">
-                  QUER MAIS DETALHES?
-                </h4>
-                <p className="font-body text-sm text-white/70 italic">
-                  Acesse os dossies completos de cada ministerio. Contratos, pagamentos, fornecedores.
-                </p>
-              </div>
-              <Link
-                href="/carrinho"
-                className="inline-flex items-center gap-2 bg-secondary-container text-on-secondary-container px-8 py-4 font-label text-sm font-black uppercase tracking-wider hover:bg-yellow-300 transition-colors shrink-0"
-              >
-                VER TODOS OS GASTOS
-              </Link>
+          {/* CTA card */}
+          <div className="mt-6 bg-emerald-900 p-8 flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="flex flex-col gap-2">
+              <h4 className="font-headline font-black uppercase text-2xl tracking-tighter text-white">
+                QUER MAIS DETALHES?
+              </h4>
+              <p className="font-body text-sm text-white/70 italic">
+                Acesse os dossies completos de cada ministerio. Contratos, pagamentos, fornecedores.
+              </p>
             </div>
+            <Link
+              href="/carrinho"
+              className="inline-flex items-center gap-2 bg-secondary-container text-on-secondary-container px-8 py-4 font-label text-sm font-black uppercase tracking-wider hover:bg-yellow-300 transition-colors shrink-0"
+            >
+              VER TODOS OS GASTOS
+            </Link>
           </div>
         </section>
       )}
 
-      {/* LINHA DO TEMPO DA FARRA */}
+      {/* LINHA DO TEMPO */}
       <section className="px-6 lg:px-12 py-10 bg-surface-container-low">
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-8">
           <div>
@@ -300,7 +279,7 @@ export default async function RankingPage() {
               TEMPO REAL
             </span>
             <h3 className="font-headline font-black uppercase text-3xl tracking-tighter text-on-surface">
-              LINHA DO TEMPO DA FARRA
+              ULTIMOS CONTRATOS
             </h3>
             <p className="mt-2 font-body text-sm text-on-surface-variant italic">
               Ultimos contratos e pagamentos registrados no Portal da Transparencia.
@@ -339,7 +318,7 @@ export default async function RankingPage() {
                   description={contrato.compra.objeto}
                   value={humanizeNumber(contrato.valorFinalCompra)}
                   status={status}
-                  isSuspect={status === 'suspeito'}
+                  isSuspect={false}
                 />
               )
             })}

@@ -4,6 +4,7 @@ import { TopNav } from "@/components/layout/top-nav";
 import { SideNav } from "@/components/layout/side-nav";
 import { BottomNav } from "@/components/layout/bottom-nav";
 import { Footer } from "@/components/layout/footer";
+import { Providers } from "@/components/providers";
 import "./globals.css";
 
 const epilogue = Epilogue({
@@ -50,15 +51,17 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-full flex flex-col">
-        <TopNav />
-        <SideNav />
+        <Providers>
+          <TopNav />
+          <SideNav />
 
-        <main className="flex-1 pt-20 lg:ml-72 pb-24 md:pb-0">
-          {children}
-        </main>
+          <main className="flex-1 pt-20 lg:ml-72 pb-24 md:pb-0">
+            {children}
+          </main>
 
-        <Footer />
-        <BottomNav />
+          <Footer />
+          <BottomNav />
+        </Providers>
       </body>
     </html>
   );

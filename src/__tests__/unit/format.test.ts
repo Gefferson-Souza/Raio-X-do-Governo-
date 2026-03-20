@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { formatBRL, humanizeNumber } from '@/lib/utils/format'
+import { formatBRL, humanizeNumber, humanizeCount } from '@/lib/utils/format'
 
 describe('formatBRL', () => {
   it('formats large integers with thousand separators', () => {
@@ -58,5 +58,50 @@ describe('humanizeNumber', () => {
 
   it('humanizes exact thousand', () => {
     expect(humanizeNumber(1_000)).toBe('R$ 1,0 mil')
+  })
+})
+
+describe('humanizeCount', () => {
+  it('humanizes trillions without R$ prefix', () => {
+    expect(humanizeCount(2_400_000_000_000)).toBe('2,4 trilhoes')
+  })
+
+  it('humanizes exact trillion without R$ prefix', () => {
+    expect(humanizeCount(1_000_000_000_000)).toBe('1,0 trilhoes')
+  })
+
+  it('humanizes billions without R$ prefix', () => {
+    expect(humanizeCount(3_500_000_000)).toBe('3,5 bilhoes')
+  })
+
+  it('humanizes millions without R$ prefix', () => {
+    expect(humanizeCount(45_000_000)).toBe('45,0 milhoes')
+  })
+
+  it('humanizes thousands without R$ prefix', () => {
+    expect(humanizeCount(1_500)).toBe('1,5 mil')
+  })
+
+  it('formats values below 1000 as locale number without R$', () => {
+    expect(humanizeCount(500)).toBe('500')
+  })
+
+  it('formats zero', () => {
+    expect(humanizeCount(0)).toBe('0')
+  })
+
+  it('formats single digit', () => {
+    expect(humanizeCount(7)).toBe('7')
+  })
+
+  it('formats value with decimal locale separator', () => {
+    expect(humanizeCount(999)).toBe('999')
+  })
+
+  it('never includes R$ symbol', () => {
+    const values = [100, 1_500, 2_000_000, 3_000_000_000, 4_000_000_000_000]
+    for (const v of values) {
+      expect(humanizeCount(v)).not.toContain('R$')
+    }
   })
 })

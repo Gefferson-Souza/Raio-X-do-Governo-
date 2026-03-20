@@ -1,13 +1,12 @@
 import { getSpendingData } from '@/lib/services/spending-service'
 import { getRecentContracts } from '@/lib/services/contracts-service'
 import { convertToEquivalences } from '@/lib/utils/equivalences'
-import { humanizeNumber } from '@/lib/utils/format'
+import { humanizeNumber, formatDateBR } from '@/lib/utils/format'
 import { REFERENCES } from '@/lib/utils/constants'
-import { pickRandomComparisons } from '@/lib/utils/comparisons'
-import { CounterHero } from '@/components/ui/counter-hero'
 import { ContractCard } from '@/components/ui/contract-card'
 import { CtaBanner } from '@/components/ui/cta-banner'
 import { StatsBar } from '@/components/ui/stats-bar'
+import { SpendingPoller } from '@/components/ui/spending-poller'
 import { MaterialIcon } from '@/components/icons/material-icon'
 import Link from 'next/link'
 
@@ -45,14 +44,6 @@ function pickBorderColor(index: number): string {
     'border-secondary',
   ] as const
   return colors[index % colors.length]
-}
-
-function formatDateBR(isoDate: string | null | undefined): string {
-  if (!isoDate) return 'N/A'
-  const parts = isoDate.split('-')
-  if (parts.length < 3) return isoDate
-  const [year, month, day] = parts
-  return `${day}/${month}/${year}`
 }
 
 function formatPerCapita(total: number): string {
@@ -93,14 +84,14 @@ export default async function Home() {
   ) || 1
 
   const [spendingSummary, contractsResult] = await Promise.all([
-    getSpendingData(2026),
+    getSpendingData(currentYear),
     getRecentContracts(30),
   ])
 
   const isSpendingError = spendingSummary.source === 'error'
   const isContractsError = contractsResult.source === 'error'
 
-  const { totalPago, totalEmpenhado, totalLiquidado } = spendingSummary
+  const { totalPago, totalEmpenhado } = spendingSummary
   const equivalences = convertToEquivalences(totalPago)
   const contratos = contractsResult.data
 
@@ -112,7 +103,6 @@ export default async function Home() {
   const perFamilyValue = formatPerFamily(totalPago)
   const perDayValue = formatPerDay(totalPago, dayOfYear)
   const salariosPerCapita = formatSalariosPerCapita(totalPago)
-  const sidebarComparisons = pickRandomComparisons(totalPago, 2)
 
   const totalPagoTrilhoes = (totalPago / 1_000_000_000_000).toFixed(1).replace('.', ',')
 
@@ -120,44 +110,20 @@ export default async function Home() {
   const anosBolsaFamilia = Math.floor(totalPago / (14_200_000_000 * 12))
   const consultasPerCapita = Math.floor((totalPago / REFERENCES.consultaSUS) / REFERENCES.populacaoBR)
 
-  const statsItems = [
-    {
-      label: 'EMPENHADO',
-      subtitle: 'Valor reservado no orcamento para gastar',
-      value: isSpendingError ? 'INDISPONIVEL' : humanizeNumber(totalEmpenhado),
-      bgClass: 'bg-emerald-900',
-      textClass: 'text-white',
-    },
-    {
-      label: 'LIQUIDADO',
-      subtitle: 'Servico entregue, pronto para pagar',
-      value: isSpendingError ? 'INDISPONIVEL' : humanizeNumber(totalLiquidado),
-      bgClass: 'bg-secondary-container',
-      textClass: 'text-on-secondary-container',
-    },
-    {
-      label: 'PAGO',
-      subtitle: 'Dinheiro que efetivamente saiu do cofre',
-      value: isSpendingError ? 'INDISPONIVEL' : humanizeNumber(totalPago),
-      bgClass: 'bg-error-container',
-      textClass: 'text-white',
-    },
-  ] as const
-
   return (
     <div className="flex flex-col gap-0">
       {/* HEADER SECTION */}
       <section className="px-4 sm:px-6 lg:px-12 pt-10 pb-6 bg-surface">
         <span className="inline-block bg-primary text-on-primary px-4 py-1 font-label text-xs font-bold uppercase tracking-widest mb-4">
-          PAINEL DA VERDADE - ONDE O SEU IMPOSTO VAI PARAR
+          DADOS OFICIAIS DO PORTAL DA TRANSPARENCIA
         </span>
         <h1 className="font-headline font-black uppercase text-6xl md:text-8xl leading-none tracking-tighter text-on-surface">
-          O CONTADOR<br />
-          DO <span className="text-error">SUMIÇO</span>
+          PRA ONDE VAI<br />
+          SEU <span className="text-error">DINHEIRO</span>?
         </h1>
         <p className="mt-4 font-body italic text-lg text-on-surface-variant max-w-2xl">
-          Acompanhe em tempo real quanto dinheiro publico esta sendo gasto pelo governo federal.
-          Cada centavo rastreado. Cada contrato exposto. Sem filtro.
+          Veja em tempo real quanto o governo federal gasta e em que ele gasta.
+          Dados oficiais, atualizados a cada 5 minutos.
         </p>
       </section>
 
@@ -178,71 +144,31 @@ export default async function Home() {
         </p>
       </div>
 
-      {/* STATS BAR */}
-      <StatsBar items={[...statsItems]} />
-
       {/* ERROR STATE FOR SPENDING */}
       {isSpendingError && (
-        <section className="mx-4 lg:mx-12 my-4">
-          <div className="bg-error-container border-2 border-error p-6">
-            <div className="flex items-center gap-3">
-              <MaterialIcon icon="error" className="text-error text-2xl" />
-              <div>
-                <h3 className="font-headline font-black uppercase text-lg text-on-error-container">
-                  DADOS INDISPONIVEIS
-                </h3>
-                <p className="font-body text-sm text-on-error-container/80">
-                  Nao foi possivel carregar os dados do Portal da Transparencia. Tente novamente em alguns minutos.
-                </p>
+        <>
+          <StatsBar totalPago="INDISPONIVEL" executionPercent={0} isError />
+          <section className="mx-4 lg:mx-12 my-4">
+            <div className="bg-error-container border-2 border-error p-6">
+              <div className="flex items-center gap-3">
+                <MaterialIcon icon="error" className="text-error text-2xl" />
+                <div>
+                  <h3 className="font-headline font-black uppercase text-lg text-on-error-container">
+                    DADOS INDISPONIVEIS
+                  </h3>
+                  <p className="font-body text-sm text-on-error-container/80">
+                    Nao foi possivel carregar os dados do Portal da Transparencia. Tente novamente em alguns minutos.
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
-        </section>
+          </section>
+        </>
       )}
 
-      {/* BIG COUNTER SECTION */}
+      {/* LIVE DATA: STATS + COUNTER WITH AUTO-REFRESH */}
       {!isSpendingError && (
-        <section className="mx-4 lg:mx-12 my-8">
-          <div className="grid grid-cols-1 lg:grid-cols-12 border-4 border-emerald-950 bg-white hard-shadow">
-            {/* LEFT: Counter Hero */}
-            <div className="lg:col-span-8 min-h-[280px]">
-              <CounterHero
-                value={totalPago}
-                label="TOTAL PAGO EM 2025"
-                source="Portal da Transparencia - Dados Abertos"
-              />
-            </div>
-
-            {/* RIGHT: Rotating Dynamic Comparisons */}
-            <div className="lg:col-span-4 bg-white p-6 lg:p-8 flex flex-row lg:flex-col justify-center gap-4 lg:gap-8">
-              {sidebarComparisons.map((comp, idx) => (
-                <div key={comp.icon}>
-                  <div className={`flex-1 border-l-4 ${comp.borderColor} pl-4 lg:border-l-0 lg:pl-0`}>
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className={`w-10 h-10 ${comp.bgColor} flex items-center justify-center shrink-0`}>
-                        <span className={`material-symbols-outlined ${comp.iconTextColor}`} style={{ fontSize: 22 }} aria-hidden="true">
-                          {comp.icon}
-                        </span>
-                      </div>
-                      <span className="text-xs font-bold uppercase font-label text-on-surface-variant tracking-widest">
-                        {comp.label}
-                      </span>
-                    </div>
-                    <span className="text-3xl font-black font-headline tracking-tighter text-on-surface">
-                      {comp.value}
-                    </span>
-                    <p className="text-xs font-body text-on-surface-variant mt-1">
-                      {comp.desc}
-                    </p>
-                  </div>
-                  {idx < sidebarComparisons.length - 1 && (
-                    <div className="hidden lg:block border-t border-outline-variant mt-4" />
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
+        <SpendingPoller initialData={spendingSummary} />
       )}
 
       {/* MOBILE CTA BUTTON */}
@@ -516,14 +442,14 @@ export default async function Home() {
       <section className="mt-12 bg-on-surface text-white p-8 mx-4 md:mx-0 md:hidden">
         <MaterialIcon icon="receipt_long" filled className="text-yellow-400 text-4xl mb-4" />
         <h2 className="font-headline font-black text-3xl uppercase leading-[0.9] tracking-tighter mb-4">
-          Seu imposto esta pagando o silencio.
+          Seu imposto, suas regras. Fiscalize.
         </h2>
         <p className="font-body text-sm text-surface-variant mb-6 leading-relaxed">
-          Fiscalize os gastos publicos. Cada centavo deve ser justificado.
+          Compartilhe esses dados para que mais pessoas saibam como o dinheiro publico e usado.
         </p>
         <div className="h-1 bg-yellow-400 w-16 mb-6" />
         <p className="font-label text-xs uppercase font-bold tracking-widest text-yellow-400">
-          #OMeuDinheiroSumindo
+          #RaioXDoGoverno
         </p>
       </section>
 

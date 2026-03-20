@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { useMotionValue, useTransform, animate, motion } from 'framer-motion'
 import { humanizeNumber } from '@/lib/utils/format'
 import { MaterialIcon } from '@/components/icons/material-icon'
@@ -15,15 +15,18 @@ interface CounterHeroProps {
 
 export function CounterHero({ value, label, source }: CounterHeroProps) {
   const isTrillion = value >= TRILLION
-  const motionValue = useMotionValue(0)
+  const isFirstRender = useRef(true)
+  const motionValue = useMotionValue(isTrillion ? value : 0)
   const displayed = useTransform(motionValue, (current) => humanizeNumber(current))
 
   useEffect(() => {
-    if (isTrillion) {
-      // At trillion scale the counting animation is meaningless — show final value immediately
+    if (isFirstRender.current && isTrillion) {
       motionValue.set(value)
+      isFirstRender.current = false
       return
     }
+    isFirstRender.current = false
+
     const controls = animate(motionValue, value, {
       duration: 2,
       ease: 'easeOut',

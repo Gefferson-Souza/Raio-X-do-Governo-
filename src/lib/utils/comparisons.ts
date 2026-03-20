@@ -1,4 +1,5 @@
-import { humanizeNumber } from './format'
+import { humanizeCount } from './format'
+import { REFERENCES } from './constants'
 
 export interface Comparison {
   readonly icon: string
@@ -29,9 +30,9 @@ const COMPARISON_POOL: readonly ComparisonDef[] = [
     bgColor: 'bg-error',
     iconTextColor: 'text-on-error',
     compute: (v: number) => ({
-      value: Math.floor(v / 5_000_000),
+      value: Math.floor(v / REFERENCES.escolaFNDE),
       label: 'ESCOLAS PODERIAM SER CONSTRUIDAS',
-      desc: 'Cada escola FNDE custa R$ 5 milhoes',
+      desc: `Cada escola FNDE custa R$ ${(REFERENCES.escolaFNDE / 1_000_000).toFixed(0)} milhoes`,
     }),
   },
   {
@@ -40,9 +41,9 @@ const COMPARISON_POOL: readonly ComparisonDef[] = [
     bgColor: 'bg-primary',
     iconTextColor: 'text-on-primary',
     compute: (v: number) => ({
-      value: Math.floor(v / 0.50),
+      value: Math.floor(v / REFERENCES.merenda),
       label: 'DOSES DE VACINA',
-      desc: 'Cada dose custa em media R$ 0,50 para o SUS',
+      desc: `Cada dose custa em media R$ ${REFERENCES.merenda.toFixed(2).replace('.', ',')} para o SUS`,
     }),
   },
   {
@@ -73,9 +74,9 @@ const COMPARISON_POOL: readonly ComparisonDef[] = [
     bgColor: 'bg-error',
     iconTextColor: 'text-on-error',
     compute: (v: number) => ({
-      value: Math.floor(v / 10),
+      value: Math.floor(v / REFERENCES.consultaSUS),
       label: 'CONSULTAS MEDICAS NO SUS',
-      desc: 'Cada consulta custa R$ 10 na tabela SUS',
+      desc: `Cada consulta custa R$ ${REFERENCES.consultaSUS.toFixed(0)} na tabela SUS`,
     }),
   },
   {
@@ -84,9 +85,9 @@ const COMPARISON_POOL: readonly ComparisonDef[] = [
     bgColor: 'bg-secondary-container',
     iconTextColor: 'text-on-secondary-container',
     compute: (v: number) => ({
-      value: Math.floor(v / 270_000),
+      value: Math.floor(v / REFERENCES.casaPopular),
       label: 'CASAS POPULARES',
-      desc: 'Cada casa do Minha Casa Minha Vida custa R$ 270 mil',
+      desc: `Cada casa do Minha Casa Minha Vida custa R$ ${(REFERENCES.casaPopular / 1_000).toFixed(0)} mil`,
     }),
   },
   {
@@ -117,9 +118,9 @@ const COMPARISON_POOL: readonly ComparisonDef[] = [
     bgColor: 'bg-tertiary-container',
     iconTextColor: 'text-on-tertiary-container',
     compute: (v: number) => ({
-      value: Math.floor(v / 1_621),
+      value: Math.floor(v / REFERENCES.salarioMinimo),
       label: 'SALARIOS MINIMOS',
-      desc: 'Salario minimo de R$ 1.621 em 2026',
+      desc: `Salario minimo de R$ ${REFERENCES.salarioMinimo.toLocaleString('pt-BR')}`,
     }),
   },
   {
@@ -128,27 +129,43 @@ const COMPARISON_POOL: readonly ComparisonDef[] = [
     bgColor: 'bg-error',
     iconTextColor: 'text-on-error',
     compute: (v: number) => ({
-      value: Math.floor(v / 680),
+      value: Math.floor(v / REFERENCES.cestaBasica),
       label: 'CESTAS BASICAS',
-      desc: 'Cada cesta basica custa R$ 680 (media DIEESE)',
+      desc: `Cada cesta basica custa R$ ${REFERENCES.cestaBasica.toFixed(0)} (media DIEESE)`,
     }),
   },
 ] as const
 
 /**
- * Picks `count` random comparisons from the pool and computes values
- * based on the spending total. Uses Math.random() which on the server
- * side (ISR with revalidate=300) gives new picks every 5 minutes.
+ * Deterministic pseudo-random number from a seed.
+ * Same seed always produces the same result on server and client.
+ */
+function seededRandom(seed: number): number {
+  const x = Math.sin(seed * 9301 + 49297) * 233280
+  return x - Math.floor(x)
+}
+
+/**
+ * Picks `count` comparisons deterministically seeded by the spending total.
+ * Same total = same picks on server and client (no hydration mismatch).
  */
 export function pickRandomComparisons(total: number, count: number = 2): readonly Comparison[] {
-  const shuffled = [...COMPARISON_POOL].sort(() => Math.random() - 0.5)
-  const picked = shuffled.slice(0, count)
+  const seed = Math.floor(total / 1_000_000)
+  const indices = COMPARISON_POOL.map((_, i) => i)
 
-  return picked.map((def) => {
+  for (let i = indices.length - 1; i > 0; i--) {
+    const j = Math.floor(seededRandom(seed + i) * (i + 1))
+    ;[indices[i], indices[j]] = [indices[j], indices[i]]
+  }
+
+  const picked = indices.slice(0, count)
+
+  return picked.map((idx) => {
+    const def = COMPARISON_POOL[idx]
     const result = def.compute(total)
     return {
       icon: def.icon,
-      value: humanizeNumber(result.value),
+      value: humanizeCount(result.value),
       label: result.label,
       desc: result.desc,
       borderColor: def.borderColor,

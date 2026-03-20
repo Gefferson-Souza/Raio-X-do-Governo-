@@ -1,0 +1,38 @@
+Codemap Analysis Report — 2026-03-20
+======================================
+
+Status: INITIAL GENERATION (no previous codemaps existed)
+
+Files Scanned: 42 source files (3,967 total lines)
+Codemaps Generated: 5
+  - docs/CODEMAPS/architecture.md  (~700 tokens)
+  - docs/CODEMAPS/frontend.md      (~900 tokens)
+  - docs/CODEMAPS/backend.md       (~600 tokens)
+  - docs/CODEMAPS/dependencies.md  (~500 tokens)
+  - docs/CODEMAPS/data.md          (~600 tokens)
+
+Architecture Summary:
+  - Project type: Single Next.js 16 app (SSR + ISR + Edge)
+  - Pages: 4 routes (/, /ranking, /carrinho, /gerador)
+  - API routes: 2 (GET /api/spending, GET /api/og)
+  - Components: 16 (4 layout, 11 UI, 1 icon)
+  - Services: 2 (spending, contracts)
+  - External APIs: 1 (Portal da Transparência)
+  - Cache: 2-tier (Upstash Redis + in-memory)
+  - No database
+
+Dependencies Detected:
+  - next 16.2.0, react 19.2.4
+  - @tanstack/react-query ^5.91.2
+  - framer-motion ^12.38.0
+  - @upstash/redis ^1.37.0
+  - nuqs ^2.8.9 (installed but not actively used)
+  - recharts ^3.8.0 (installed but not actively used)
+
+Staleness Warnings:
+  - None (first generation)
+
+Notes:
+  - nuqs and recharts are declared as dependencies but have no active usage in pages/components
+  - SonarQube infrastructure added (docker-compose.sonar.yml)
+  - Test coverage at 18.2% (target: 80%)

@@ -1,9 +1,9 @@
 import { MaterialIcon } from '@/components/icons/material-icon'
-import { getSpendingData } from '@/lib/services/spending-service'
 import { getRecentContracts } from '@/lib/services/contracts-service'
-import { humanizeNumber, formatBRL } from '@/lib/utils/format'
-import { convertToEquivalences } from '@/lib/utils/equivalences'
+import { humanizeNumber, formatBRL, formatDateBR } from '@/lib/utils/format'
+import { convertToEquivalences, type Equivalences } from '@/lib/utils/equivalences'
 import { DataSourceBanner } from '@/components/ui/data-source-banner'
+import type { Contrato } from '@/lib/api/types'
 
 export const revalidate = 300
 
@@ -37,33 +37,70 @@ function pickIcon(objeto: string): string {
   return 'receipt_long'
 }
 
-function pickEquivalence(valor: number): string {
+const EQ_LABELS = [
+  (eq: Equivalences) => `${eq.salariosMinimos.toLocaleString('pt-BR')} salarios minimos`,
+  (eq: Equivalences) => `${eq.cestasBasicas.toLocaleString('pt-BR')} cestas basicas`,
+  (eq: Equivalences) => `${eq.consultasSUS.toLocaleString('pt-BR')} consultas no SUS`,
+  (eq: Equivalences) => `${eq.casasPopulares.toLocaleString('pt-BR')} casas populares`,
+  (eq: Equivalences) => `${eq.ambulanciasUTI.toLocaleString('pt-BR')} ambulancias UTI`,
+  (eq: Equivalences) => `${eq.kitsEscolares.toLocaleString('pt-BR')} kits escolares`,
+] as const
+
+function pickEquivalence(valor: number, index: number): string {
   const eq = convertToEquivalences(valor)
-  if (eq.ambulanciasUTI >= 1) return `${eq.ambulanciasUTI.toLocaleString('pt-BR')} AMBULANCIA(S) UTI`
-  if (eq.casasPopulares >= 1) return `${eq.casasPopulares.toLocaleString('pt-BR')} CASA(S) POPULAR(ES)`
-  if (eq.consultasSUS >= 1) return `${eq.consultasSUS.toLocaleString('pt-BR')} CONSULTAS SUS`
-  if (eq.cestasBasicas >= 1) return `${eq.cestasBasicas.toLocaleString('pt-BR')} CESTAS BASICAS`
-  if (eq.kitsEscolares >= 1) return `${eq.kitsEscolares.toLocaleString('pt-BR')} KITS ESCOLARES`
-  if (eq.merendas >= 1) return `${eq.merendas.toLocaleString('pt-BR')} MERENDAS ESCOLARES`
-  return `${eq.salariosMinimos.toLocaleString('pt-BR')} SALARIOS MINIMOS`
+  const formatter = EQ_LABELS[index % EQ_LABELS.length]
+  const result = formatter(eq)
+  if (result.startsWith('0 ')) {
+    return `${eq.salariosMinimos.toLocaleString('pt-BR')} salarios minimos`
+  }
+  return result
+}
+
+type DisplayItem =
+  | { readonly kind: 'contract'; readonly contrato: Contrato; readonly eqIdx: number }
+  | { readonly kind: 'collapsed'; readonly supplier: string; readonly extra: number; readonly totalValue: number }
+
+function buildDisplayItems(contracts: readonly Contrato[]): readonly DisplayItem[] {
+  const seen = new Map<string, number>()
+  const collapsed = new Set<string>()
+  const items: DisplayItem[] = []
+  let eqIdx = 0
+
+  for (const c of contracts) {
+    const name = c.fornecedor?.nome ?? 'Nao informado'
+    const count = (seen.get(name) ?? 0) + 1
+    seen.set(name, count)
+
+    if (count <= 2) {
+      items.push({ kind: 'contract', contrato: c, eqIdx: eqIdx++ })
+    } else if (!collapsed.has(name)) {
+      collapsed.add(name)
+      const allFromSupplier = contracts.filter(
+        (x) => (x.fornecedor?.nome ?? 'Nao informado') === name,
+      )
+      const extra = allFromSupplier.length - 2
+      const totalValue = allFromSupplier
+        .slice(2)
+        .reduce((s, x) => s + x.valorFinalCompra, 0)
+      items.push({ kind: 'collapsed', supplier: name, extra, totalValue })
+    }
+  }
+
+  return items
 }
 
 export default async function CarrinhoPage() {
-  const year = new Date().getFullYear()
-  const [spendingSummary, { data: contracts, source: contractsSource }] = await Promise.all([
-    getSpendingData(year),
-    getRecentContracts(90),
-  ])
+  const { data: contracts, source: contractsSource } = await getRecentContracts(90)
 
-  const isSpendingError = spendingSummary.source === 'error'
   const isContractsError = contractsSource === 'error'
   const hasContracts = contracts.length > 0
 
-  const topContracts = [...contracts]
+  const sortedContracts = [...contracts]
     .sort((a, b) => b.valorFinalCompra - a.valorFinalCompra)
-    .slice(0, 12)
+    .slice(0, 20)
 
   const totalContratos = contracts.reduce((sum, c) => sum + c.valorFinalCompra, 0)
+  const displayItems = buildDisplayItems(sortedContracts)
 
   return (
     <div className="pb-12 lg:pl-8 px-4 md:px-8">
@@ -80,26 +117,18 @@ export default async function CarrinhoPage() {
         </p>
       </section>
 
-      <section className="grid grid-cols-1 md:grid-cols-3 gap-0">
-        <div className="p-6 bg-emerald-900">
-          <span className="block text-xs uppercase tracking-widest font-label text-yellow-400">
-            Total Pago ({year})
-          </span>
-          <span className="block text-3xl font-black tracking-tighter font-headline text-white">
-            {isSpendingError ? 'INDISPONIVEL' : humanizeNumber(spendingSummary.totalPago)}
-          </span>
-        </div>
+      <section className="grid grid-cols-1 md:grid-cols-2 gap-0">
         <div className="p-6 bg-yellow-400">
           <span className="block text-xs uppercase tracking-widest font-label text-emerald-950">
-            Contratos Recentes
+            Contratos Encontrados
           </span>
           <span className="block text-3xl font-black tracking-tighter font-headline text-emerald-950">
-            {isContractsError ? 'INDISPONIVEL' : `${contracts.length} CONTRATOS`}
+            {isContractsError ? 'INDISPONIVEL' : `${contracts.length} contratos`}
           </span>
         </div>
         <div className="p-6 bg-surface-container-highest">
           <span className="block text-xs uppercase tracking-widest font-label text-on-surface-variant">
-            Valor Total Contratos
+            Valor Total
           </span>
           <span className="block text-3xl font-black tracking-tighter font-headline text-error">
             {isContractsError ? 'INDISPONIVEL' : humanizeNumber(totalContratos)}
@@ -109,7 +138,7 @@ export default async function CarrinhoPage() {
 
       <DataSourceBanner
         source={isContractsError ? 'error' : contractsSource}
-        updatedAt={spendingSummary.atualizadoEm}
+        updatedAt={new Date().toISOString()} /* TODO: use actual data timestamp when contracts-service exposes it */
       />
 
       {isContractsError && (
@@ -131,58 +160,70 @@ export default async function CarrinhoPage() {
       )}
 
       {hasContracts && (
-        <section className="mt-12">
-          <div
-            className="grid gap-8"
-            style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))' }}
-          >
-            {topContracts.map((contrato) => {
-              const equivalence = pickEquivalence(contrato.valorFinalCompra)
-              const icon = pickIcon(contrato.compra?.objeto || '')
-              const objeto = contrato.compra?.objeto || 'Contrato Federal'
-              const fornecedor = contrato.fornecedor?.nome || 'Nao informado'
+        <section className="mt-8">
+          <div className="flex flex-col gap-0 border-2 border-outline-variant bg-white">
+            {displayItems.map((item) => {
+              if (item.kind === 'collapsed') {
+                return (
+                  <div
+                    key={`collapsed-${item.supplier}`}
+                    className="px-6 py-4 bg-surface-container-low border-b border-outline-variant flex items-center gap-3"
+                  >
+                    <MaterialIcon icon="more_horiz" className="text-on-surface-variant" />
+                    <span className="font-body text-sm text-on-surface-variant">
+                      e mais <strong>{item.extra}</strong> contrato{item.extra > 1 ? 's' : ''} com{' '}
+                      <strong>{item.supplier}</strong>{' '}
+                      <span className="text-xs text-on-surface-variant/60">
+                        (total: {formatBRL(item.totalValue)})
+                      </span>
+                    </span>
+                  </div>
+                )
+              }
+
+              const { contrato, eqIdx } = item
+              const objeto = contrato.compra?.objeto ?? 'Sem descricao'
+              const fornecedor = contrato.fornecedor?.nome ?? 'Nao informado'
+              const orgao = contrato.unidadeGestora?.orgaoVinculado?.nome ?? ''
+              const numero = contrato.compra?.numero ?? 'N/A'
+              const icon = pickIcon(objeto)
+              const equivalence = pickEquivalence(contrato.valorFinalCompra, eqIdx)
 
               return (
                 <div
                   key={contrato.id}
-                  className="relative bg-white border-b-[8px] border-primary hard-shadow flex flex-col"
+                  className="border-b border-outline-variant last:border-b-0 p-6 flex flex-col md:flex-row md:items-start gap-4"
                 >
-                  <span className="absolute top-3 right-3 z-10 font-label text-xs font-black uppercase px-3 py-1 bg-secondary-container text-on-secondary-container">
-                    AUDITADO
-                  </span>
-
-                  <div className="h-48 overflow-hidden bg-surface-container-high flex items-center justify-center">
-                    <MaterialIcon icon={icon} size={64} className="text-on-surface-variant/40" />
+                  <div className="flex items-center justify-center w-10 h-10 bg-surface-container-high shrink-0">
+                    <MaterialIcon icon={icon} size={22} className="text-on-surface-variant" />
                   </div>
 
-                  <div className="p-6 flex flex-col gap-4 flex-1">
-                    <h3 className="font-headline font-black text-xl uppercase leading-tight line-clamp-3">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-headline font-black text-base uppercase leading-tight line-clamp-2 text-on-surface">
                       {objeto}
                     </h3>
-                    <p className="font-body text-xs text-on-surface-variant uppercase">
-                      {typeof fornecedor === 'string' ? fornecedor : ''}
-                    </p>
-                    <p className="font-label text-xs text-primary font-bold uppercase">
-                      {contrato.unidadeGestora?.orgaoVinculado?.nome || ''}
-                    </p>
-
-                    <div className="bg-surface-container-low p-4 mt-auto">
-                      <span className="block text-xs uppercase tracking-widest font-label text-on-surface-variant">
-                        Valor do Contrato
-                      </span>
-                      <span className="block text-2xl font-black font-headline text-error">
-                        {formatBRL(contrato.valorFinalCompra)}
-                      </span>
+                    <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-label text-on-surface-variant">
+                      <span>Contrato {numero}</span>
+                      <span className="w-1 h-1 bg-outline-variant rounded-full" />
+                      <span>{formatDateBR(contrato.dataInicioVigencia)} a {formatDateBR(contrato.dataFimVigencia)}</span>
                     </div>
+                    <p className="mt-1 font-body text-sm text-on-surface-variant">
+                      {fornecedor}
+                    </p>
+                    {orgao && (
+                      <p className="font-label text-xs text-primary font-bold uppercase mt-1">
+                        {orgao}
+                      </p>
+                    )}
+                  </div>
 
-                    <div className="bg-secondary-container p-4">
-                      <span className="block text-xs uppercase tracking-widest font-label text-on-secondary-container">
-                        O QUE ISSO COMPRA?
-                      </span>
-                      <span className="block text-base font-bold font-headline text-on-secondary-container">
-                        {equivalence}
-                      </span>
-                    </div>
+                  <div className="shrink-0 text-right md:min-w-[180px]">
+                    <span className="block text-xl font-black font-headline text-error tracking-tight">
+                      {formatBRL(contrato.valorFinalCompra)}
+                    </span>
+                    <span className="block text-xs font-label text-on-surface-variant uppercase mt-1">
+                      {equivalence}
+                    </span>
                   </div>
                 </div>
               )
