@@ -4,7 +4,7 @@ import { useState, useCallback } from 'react'
 import { MaterialIcon } from '@/components/icons/material-icon'
 import { formatBRL } from '@/lib/utils/format'
 import { convertToEquivalences, type Equivalences } from '@/lib/utils/equivalences'
-import { shareOnWhatsApp, downloadOgImage } from '@/lib/utils/share'
+import { shareOnWhatsApp, shareOnLinkedIn, downloadOgImage } from '@/lib/utils/share'
 
 interface RealDataItem {
   readonly label: string
@@ -98,6 +98,11 @@ export function ImpactGenerator({ realOrgaos, realContracts }: ImpactGeneratorPr
     const origin = window.location.origin
     shareOnWhatsApp(text, `${origin}/gerador`)
   }, [valorFormatted, itemLabel, equivalenceText])
+
+  const handleLinkedIn = useCallback(() => {
+    const origin = window.location.origin
+    shareOnLinkedIn(`${origin}/gerador`)
+  }, [])
 
   const hasRealData = realOrgaos.length > 0 || realContracts.length > 0
 
@@ -284,7 +289,7 @@ export function ImpactGenerator({ realOrgaos, realContracts }: ImpactGeneratorPr
           </div>
 
           {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row items-center gap-4 w-full max-w-[600px]">
+          <div className="flex flex-col sm:flex-row items-center gap-3 w-full max-w-[600px]">
             <button
               type="button"
               onClick={handleDownload}
@@ -301,7 +306,16 @@ export function ImpactGenerator({ realOrgaos, realContracts }: ImpactGeneratorPr
               style={{ backgroundColor: '#25D366' }}
             >
               <MaterialIcon icon="share" size={20} />
-              COMPARTILHAR NO WHATSAPP
+              WHATSAPP
+            </button>
+            <button
+              type="button"
+              onClick={handleLinkedIn}
+              className="flex-1 w-full inline-flex items-center justify-center gap-2 text-white font-label font-bold uppercase tracking-wider py-4 hover:opacity-90 transition-opacity"
+              style={{ backgroundColor: '#0A66C2' }}
+            >
+              <MaterialIcon icon="work" size={20} />
+              LINKEDIN
             </button>
           </div>
         </div>

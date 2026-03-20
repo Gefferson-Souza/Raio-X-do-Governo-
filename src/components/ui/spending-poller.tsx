@@ -115,6 +115,11 @@ export function SpendingPoller({ initialData }: SpendingPollerProps) {
                     </div>
                     <span className="font-body text-xs text-on-surface-variant">
                       {Math.round(orgao.percentOfTotal)}% do total
+                      {orgao.shortName.toUpperCase().includes('FAZENDA') && orgao.percentOfTotal > 50 && (
+                        <span className="text-on-surface-variant/60 italic">
+                          {' '}— inclui juros e refinanciamento da divida publica
+                        </span>
+                      )}
                     </span>
                   </div>
                 ))}

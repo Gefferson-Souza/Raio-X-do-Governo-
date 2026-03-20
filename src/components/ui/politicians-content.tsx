@@ -32,6 +32,7 @@ export function PoliticiansContent({ initialData }: PoliticiansContentProps) {
   const hasData = data.atualizadoEm !== ''
 
   const custoTotal = data.deputados.totalGasto + data.senadores.totalGasto
+  const custoTotalAnoAnterior = data.deputados.totalGastoAnoAnterior + data.senadores.totalGastoAnoAnterior
   const perCapita = custoTotal > 0 ? custoTotal / REFERENCES.populacaoBR : 0
   const perDay = custoTotal > 0 ? custoTotal / 365 : 0
 
@@ -81,7 +82,7 @@ export function PoliticiansContent({ initialData }: PoliticiansContentProps) {
       {custoTotal > 0 && (
         <div className="mt-6">
           <p className="font-label text-xs text-white/50 uppercase tracking-widest mb-1">
-            QUANTO DEPUTADOS E SENADORES GASTARAM DA COTA PARLAMENTAR EM {new Date().getFullYear()} ATE AGORA
+            QUANTO DEPUTADOS E SENADORES GASTARAM DA COTA PARLAMENTAR EM {data.periodo.anoAtual} ATE AGORA
           </p>
           <p className="text-5xl md:text-7xl font-black tracking-tighter font-headline text-yellow-400">
             {humanizeNumber(custoTotal)}
@@ -89,6 +90,11 @@ export function PoliticiansContent({ initialData }: PoliticiansContentProps) {
           <p className="mt-2 text-lg font-body text-white/60">
             Isso da {formatBRL(perCapita)} por brasileiro, ou {humanizeNumber(perDay)} por dia
           </p>
+          {custoTotalAnoAnterior > 0 && (
+            <p className="mt-2 text-sm font-body text-white/40">
+              Em {data.periodo.anoAnterior} inteiro foram {humanizeNumber(custoTotalAnoAnterior)}
+            </p>
+          )}
         </div>
       )}
       <p className="mt-4 text-xs font-label text-white/40 uppercase tracking-widest">
@@ -119,19 +125,22 @@ export function PoliticiansBody({ initialData }: PoliticiansContentProps) {
   const hasData = data.atualizadoEm !== ''
   if (!hasData) return null
 
-  const custoTotal = data.deputados.totalGasto + data.senadores.totalGasto
-
   return (
     <>
       {/* ═══ STATS BAR ═══ */}
       <section className="grid grid-cols-2 md:grid-cols-4 gap-0 -mx-4 md:-mx-8 lg:mx-0">
         <div className="p-4 md:p-6 bg-yellow-400">
           <span className="block text-xs uppercase tracking-widest font-label text-emerald-950">
-            Deputados — acumulado {new Date().getFullYear()}
+            Deputados — acumulado {data.periodo.anoAtual}
           </span>
           <span className="block text-2xl md:text-3xl font-black tracking-tighter font-headline text-emerald-950">
             {humanizeNumber(data.deputados.totalGasto)}
           </span>
+          {data.deputados.totalGastoAnoAnterior > 0 && (
+            <span className="block text-xs font-body text-emerald-950/60 mt-1">
+              Em {data.periodo.anoAnterior} inteiro: {humanizeNumber(data.deputados.totalGastoAnoAnterior)}
+            </span>
+          )}
         </div>
         <div className="p-4 md:p-6 bg-surface-container-highest">
           <span className="block text-xs uppercase tracking-widest font-label text-on-surface-variant">
@@ -140,6 +149,11 @@ export function PoliticiansBody({ initialData }: PoliticiansContentProps) {
           <span className="block text-2xl md:text-3xl font-black tracking-tighter font-headline text-error">
             {humanizeNumber(data.senadores.totalGasto)}
           </span>
+          {data.senadores.totalGastoAnoAnterior > 0 && (
+            <span className="block text-xs font-body text-on-surface-variant/60 mt-1">
+              Em {data.periodo.anoAnterior} inteiro: {humanizeNumber(data.senadores.totalGastoAnoAnterior)}
+            </span>
+          )}
         </div>
         {data.viagens.totalGasto > 0 && (
           <div className="p-4 md:p-6 bg-emerald-900">
@@ -283,11 +297,16 @@ export function PoliticiansBody({ initialData }: PoliticiansContentProps) {
       {/* ═══ EMENDAS ═══ */}
       {data.emendas.topAutores.length > 0 && (
         <section className="mt-12">
-          <SectionHeader icon="request_quote" bgColor="bg-tertiary-container" iconColor="text-on-tertiary-container" title="EMENDAS PARLAMENTARES" subtitle={`Quem mais direcionou dinheiro publico via emendas em ${new Date().getFullYear()} • Fonte: Portal da Transparencia`} />
+          <SectionHeader icon="request_quote" bgColor="bg-tertiary-container" iconColor="text-on-tertiary-container" title="EMENDAS PARLAMENTARES" subtitle={`Quem mais direcionou dinheiro publico via emendas em ${data.periodo.anoAtual} • Fonte: Portal da Transparencia`} />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-0 mb-4 -mx-4 md:mx-0">
             <div className="p-4 bg-emerald-900">
-              <span className="block text-xs uppercase tracking-widest font-label text-emerald-300">Total pago</span>
+              <span className="block text-xs uppercase tracking-widest font-label text-emerald-300">Total pago em {data.periodo.anoAtual}</span>
               <span className="block text-2xl font-black tracking-tighter font-headline text-white">{humanizeNumber(data.emendas.totalPago)}</span>
+              {data.emendas.totalPagoAnoAnterior > 0 && (
+                <span className="block text-xs font-body text-emerald-300/60 mt-1">
+                  Em {data.periodo.anoAnterior} inteiro: {humanizeNumber(data.emendas.totalPagoAnoAnterior)}
+                </span>
+              )}
             </div>
             <div className="p-4 bg-surface-container-highest">
               <span className="block text-xs uppercase tracking-widest font-label text-on-surface-variant">Total empenhado</span>

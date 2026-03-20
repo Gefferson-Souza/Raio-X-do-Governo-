@@ -245,7 +245,7 @@ export default async function Home() {
                 description={`${contrato.fornecedor?.nome ?? 'N/A'} - CNPJ: ${contrato.fornecedor?.cnpjFormatado ?? 'N/A'}`}
                 value={humanizeNumber(contrato.valorFinalCompra ?? 0)}
                 category={contrato.unidadeGestora?.orgaoVinculado?.nome ?? 'Orgao nao informado'}
-                status={`CONTRATO ${contrato.compra?.numero ?? 'N/A'} - VIGENCIA ATE ${formatDateBR(contrato.dataFimVigencia)}`}
+                status={contrato.compra?.numero ? `Contrato ${contrato.compra.numero}${contrato.dataFimVigencia ? ` — ate ${formatDateBR(contrato.dataFimVigencia)}` : ''}` : 'Contrato federal'}
                 borderColor={pickBorderColor(index)}
               />
             ))}

@@ -7,6 +7,14 @@ export function shareOnWhatsApp(text: string, url: string): void {
   )
 }
 
+export function shareOnLinkedIn(url: string): void {
+  window.open(
+    `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`,
+    '_blank',
+    'noopener,noreferrer',
+  )
+}
+
 export function shareOnTwitter(text: string, url: string): void {
   window.open(
     `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`,
