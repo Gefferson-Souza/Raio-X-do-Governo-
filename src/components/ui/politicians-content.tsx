@@ -56,7 +56,7 @@ export function PoliticiansContent({ initialData }: PoliticiansContentProps) {
       {custoTotal > 0 && (
         <div className="mt-6">
           <p className="font-label text-xs text-white/50 uppercase tracking-widest mb-1">
-            COTA PARLAMENTAR (CEAP + CEAPS) — {new Date().getFullYear()}
+            QUANTO DEPUTADOS E SENADORES GASTARAM DA COTA PARLAMENTAR EM {new Date().getFullYear()} ATE AGORA
           </p>
           <p className="text-5xl md:text-7xl font-black tracking-tighter font-headline text-yellow-400">
             {humanizeNumber(custoTotal)}
@@ -102,7 +102,7 @@ export function PoliticiansBody({ initialData }: PoliticiansContentProps) {
       <section className="grid grid-cols-2 md:grid-cols-4 gap-0 -mx-4 md:-mx-8 lg:mx-0">
         <div className="p-4 md:p-6 bg-yellow-400">
           <span className="block text-xs uppercase tracking-widest font-label text-emerald-950">
-            Deputados (CEAP)
+            Deputados — acumulado {new Date().getFullYear()}
           </span>
           <span className="block text-2xl md:text-3xl font-black tracking-tighter font-headline text-emerald-950">
             {humanizeNumber(data.deputados.totalGasto)}
@@ -110,7 +110,7 @@ export function PoliticiansBody({ initialData }: PoliticiansContentProps) {
         </div>
         <div className="p-4 md:p-6 bg-surface-container-highest">
           <span className="block text-xs uppercase tracking-widest font-label text-on-surface-variant">
-            Senadores (CEAPS)
+            Senadores — ultimo ano disponivel
           </span>
           <span className="block text-2xl md:text-3xl font-black tracking-tighter font-headline text-error">
             {humanizeNumber(data.senadores.totalGasto)}
@@ -153,7 +153,7 @@ export function PoliticiansBody({ initialData }: PoliticiansContentProps) {
       {/* ═══ DEPUTADOS ═══ */}
       {data.deputados.ranking.length > 0 && (
         <section className="mt-12">
-          <SectionHeader icon="how_to_reg" bgColor="bg-primary" iconColor="text-on-primary" title="DEPUTADOS QUE MAIS GASTAM" subtitle="Cota para Exercicio da Atividade Parlamentar (CEAP)" />
+          <SectionHeader icon="how_to_reg" bgColor="bg-primary" iconColor="text-on-primary" title="DEPUTADOS QUE MAIS GASTAM" subtitle={`Quanto cada deputado gastou da cota parlamentar (CEAP) em ${new Date().getFullYear()} ate agora • Fonte: Camara dos Deputados`} />
           <div className="flex flex-col gap-0 border-2 border-outline-variant bg-white">
             {data.deputados.ranking.map((dep, i) => {
               const eq = convertToEquivalences(dep.totalGasto)
@@ -183,7 +183,7 @@ export function PoliticiansBody({ initialData }: PoliticiansContentProps) {
       {/* ═══ SENADORES ═══ */}
       {data.senadores.ranking.length > 0 && (
         <section className="mt-12">
-          <SectionHeader icon="account_balance" bgColor="bg-secondary-container" iconColor="text-on-secondary-container" title="SENADORES QUE MAIS GASTAM" subtitle="Cota para Exercicio da Atividade Parlamentar dos Senadores (CEAPS)" />
+          <SectionHeader icon="account_balance" bgColor="bg-secondary-container" iconColor="text-on-secondary-container" title="SENADORES QUE MAIS GASTAM" subtitle="Quanto cada senador gastou da cota parlamentar (CEAPS) no ultimo ano com dados disponiveis • Fonte: Senado Federal" />
           <div className="flex flex-col gap-0 border-2 border-outline-variant bg-white">
             {data.senadores.ranking.map((sen, i) => {
               const eq = convertToEquivalences(sen.totalGasto)
@@ -209,7 +209,7 @@ export function PoliticiansBody({ initialData }: PoliticiansContentProps) {
       {/* ═══ CARTAO CORPORATIVO ═══ */}
       {data.cartoes.topPortadores.length > 0 && (
         <section className="mt-12">
-          <SectionHeader icon="credit_card" bgColor="bg-error" iconColor="text-on-error" title="CARTAO CORPORATIVO" subtitle="Maiores portadores nos ultimos 3 meses" />
+          <SectionHeader icon="credit_card" bgColor="bg-error" iconColor="text-on-error" title="CARTAO CORPORATIVO DO GOVERNO" subtitle="Quem mais gastou com o cartao corporativo nos ultimos 3 meses • Fonte: Portal da Transparencia" />
           <div className="flex flex-col gap-0 border-2 border-outline-variant bg-white">
             {data.cartoes.topPortadores.map((portador, i) => (
               <div key={`${portador.portador}-${i}`} className="border-b border-outline-variant last:border-b-0 p-4 md:p-6 flex items-center gap-4">
@@ -231,7 +231,7 @@ export function PoliticiansBody({ initialData }: PoliticiansContentProps) {
       {/* ═══ TOP SALARIOS ═══ */}
       {data.remuneracoes.topServidores.length > 0 && (
         <section className="mt-12">
-          <SectionHeader icon="payments" bgColor="bg-tertiary-container" iconColor="text-on-tertiary-container" title="MAIORES SALARIOS DO GOVERNO" subtitle="Remuneracao bruta de servidores federais" />
+          <SectionHeader icon="payments" bgColor="bg-tertiary-container" iconColor="text-on-tertiary-container" title="MAIORES SALARIOS DO GOVERNO" subtitle="Servidores federais com maior remuneracao bruta no ultimo mes disponivel • Fonte: Portal da Transparencia" />
           <div className="flex flex-col gap-0 border-2 border-outline-variant bg-white">
             {data.remuneracoes.topServidores.map((servidor, i) => {
               const salarios = Math.floor(servidor.remuneracaoBruta / REFERENCES.salarioMinimo)
@@ -258,7 +258,7 @@ export function PoliticiansBody({ initialData }: PoliticiansContentProps) {
       {/* ═══ EMENDAS ═══ */}
       {data.emendas.topAutores.length > 0 && (
         <section className="mt-12">
-          <SectionHeader icon="request_quote" bgColor="bg-tertiary-container" iconColor="text-on-tertiary-container" title="EMENDAS PARLAMENTARES" subtitle={`Autores que mais direcionaram emendas em ${new Date().getFullYear()}`} />
+          <SectionHeader icon="request_quote" bgColor="bg-tertiary-container" iconColor="text-on-tertiary-container" title="EMENDAS PARLAMENTARES" subtitle={`Quem mais direcionou dinheiro publico via emendas em ${new Date().getFullYear()} • Fonte: Portal da Transparencia`} />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-0 mb-4 -mx-4 md:mx-0">
             <div className="p-4 bg-emerald-900">
               <span className="block text-xs uppercase tracking-widest font-label text-emerald-300">Total pago</span>
@@ -290,7 +290,7 @@ export function PoliticiansBody({ initialData }: PoliticiansContentProps) {
       {/* ═══ VIAGENS ═══ */}
       {data.viagens.recentes.length > 0 && (
         <section className="mt-12">
-          <SectionHeader icon="flight" bgColor="bg-error" iconColor="text-on-error" title="VIAGENS OFICIAIS" subtitle="Viagens mais caras nos ultimos 30 dias" />
+          <SectionHeader icon="flight" bgColor="bg-error" iconColor="text-on-error" title="VIAGENS OFICIAIS MAIS CARAS" subtitle="Viagens a servico pagas com dinheiro publico nos ultimos 30 dias • Fonte: Portal da Transparencia" />
           <div className="flex flex-col gap-0 border-2 border-outline-variant bg-white">
             {data.viagens.recentes.slice(0, 10).map((viagem, i) => (
               <div key={`${viagem.viajante}-${viagem.dataInicio}-${i}`} className="border-b border-outline-variant last:border-b-0 p-4 md:p-6 flex flex-col md:flex-row md:items-center gap-2 md:gap-4">

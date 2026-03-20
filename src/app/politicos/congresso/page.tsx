@@ -58,7 +58,7 @@ export default function CongressoPage() {
         {hasData && custoTotal > 0 ? (
           <>
             <p className="text-6xl md:text-8xl font-black tracking-tighter font-headline text-white">{humanizeNumber(custoTotal)}</p>
-            <p className="mt-4 text-lg md:text-xl font-body text-white/60">So em cota parlamentar (CEAP + CEAPS) de deputados e senadores</p>
+            <p className="mt-4 text-lg md:text-xl font-body text-white/60">Quanto deputados e senadores gastaram da cota parlamentar em {new Date().getFullYear()} ate agora</p>
             <p className="mt-4 text-xs font-label text-white/40 uppercase tracking-widest">Fonte: Camara dos Deputados + Senado Federal • Atualizado em {formatDateBR(data.atualizadoEm)}</p>
           </>
         ) : (
@@ -96,8 +96,8 @@ export default function CongressoPage() {
           <section className="mt-12">
             <h2 className="font-headline font-black uppercase text-2xl tracking-tighter text-on-surface mb-6">CAMARA vs SENADO</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <ComparisonCard title="CAMARA DOS DEPUTADOS" icon="how_to_reg" count={numDeputados} label="deputados no ranking" total={custoDeputados} media={mediaDeputado} />
-              <ComparisonCard title="SENADO FEDERAL" icon="account_balance" count={numSenadores} label="senadores no ranking" total={custoSenadores} media={mediaSenador} />
+              <ComparisonCard title="CAMARA DOS DEPUTADOS" icon="how_to_reg" count={numDeputados} label={`deputados com dados em ${new Date().getFullYear()}`} total={custoDeputados} media={mediaDeputado} />
+              <ComparisonCard title="SENADO FEDERAL" icon="account_balance" count={numSenadores} label="senadores (ultimo ano disponivel)" total={custoSenadores} media={mediaSenador} />
             </div>
           </section>
 

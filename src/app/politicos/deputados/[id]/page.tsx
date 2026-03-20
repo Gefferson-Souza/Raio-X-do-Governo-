@@ -108,7 +108,7 @@ export default function DeputadoDetailPage() {
       {/* TOTAL GASTO */}
       <section className="grid grid-cols-1 md:grid-cols-3 gap-0 -mx-4 md:-mx-8 lg:mx-0">
         <div className="p-6 bg-yellow-400">
-          <span className="block text-xs uppercase tracking-widest font-label text-emerald-950">Total gasto (CEAP)</span>
+          <span className="block text-xs uppercase tracking-widest font-label text-emerald-950">Gastou da cota parlamentar em {new Date().getFullYear()} ate agora</span>
           <span className="block text-3xl font-black tracking-tighter font-headline text-emerald-950">{humanizeNumber(deputado.totalGasto)}</span>
         </div>
         <div className="p-6 bg-surface-container-highest">
@@ -125,7 +125,7 @@ export default function DeputadoDetailPage() {
       {deputado.topDespesas.length > 0 && (
         <section className="mt-10">
           <h2 className="font-headline font-black uppercase text-2xl tracking-tighter text-on-surface mb-2">GASTOU COM O QUE?</h2>
-          <p className="font-body text-sm text-on-surface-variant mb-6">Principais tipos de despesa da cota parlamentar</p>
+          <p className="font-body text-sm text-on-surface-variant mb-6">Onde esse deputado gastou a cota parlamentar em {new Date().getFullYear()} ate agora • Fonte: Camara dos Deputados</p>
           <div className="flex flex-col gap-4">
             {deputado.topDespesas.map((desp) => {
               const percent = (desp.total / maxDespesa) * 100
@@ -147,7 +147,8 @@ export default function DeputadoDetailPage() {
 
       {/* EQUIVALENCIAS */}
       <section className="mt-10">
-        <h2 className="font-headline font-black uppercase text-2xl tracking-tighter text-on-surface mb-6">O QUE ESSE DINHEIRO COMPRA</h2>
+        <h2 className="font-headline font-black uppercase text-2xl tracking-tighter text-on-surface mb-2">O QUE ESSE DINHEIRO COMPRA</h2>
+        <p className="font-body text-sm text-on-surface-variant mb-6">Se esse dinheiro fosse usado de outra forma, compraria:</p>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[
             { icon: 'restaurant', value: eq.cestasBasicas, label: 'cestas basicas', color: 'text-error' },

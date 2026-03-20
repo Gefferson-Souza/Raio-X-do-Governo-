@@ -52,7 +52,7 @@ export default function PartidosPage() {
       <section className="bg-emerald-900 p-8 md:p-12 -mx-4 md:-mx-8 lg:mx-0">
         <span className="inline-block bg-yellow-400 text-emerald-950 px-4 py-1 font-label text-xs font-bold uppercase tracking-widest mb-6">DADOS DO SENADO FEDERAL — CEAPS</span>
         <h1 className="text-4xl md:text-6xl font-black uppercase tracking-tighter font-headline text-white">RAIO-X DOS PARTIDOS</h1>
-        <p className="mt-4 text-lg font-body text-white/60">Quanto cada partido custa pro contribuinte brasileiro</p>
+        <p className="mt-4 text-lg font-body text-white/60">Quanto cada partido gastou da cota parlamentar no ultimo ano com dados disponiveis</p>
         {hasData && <p className="mt-4 text-xs font-label text-white/40 uppercase tracking-widest">Atualizado em {formatDateBR(data.atualizadoEm)}</p>}
       </section>
 
@@ -112,7 +112,7 @@ export default function PartidosPage() {
           {/* BAR CHART */}
           <section className="mt-12">
             <h2 className="font-headline font-black uppercase text-2xl tracking-tighter text-on-surface mb-2">GASTO MEDIO POR PARLAMENTAR</h2>
-            <p className="font-body text-sm text-on-surface-variant mb-6">Linha tracejada = media geral</p>
+            <p className="font-body text-sm text-on-surface-variant mb-6">Ordenado pelo custo medio por senador no ultimo ano com dados • Linha tracejada = media geral • Fonte: Senado Federal</p>
             <div className="flex flex-col gap-3">
               {partidos.map((p) => {
                 const percent = maxMedia > 0 ? (p.mediaPorParlamentar / maxMedia) * 100 : 0
