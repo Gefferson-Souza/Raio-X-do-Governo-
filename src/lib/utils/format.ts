@@ -6,11 +6,14 @@ export function formatBRL(value: number): string {
 }
 
 export function humanizeNumber(value: number): string {
+  if (value >= 1_000_000_000_000) {
+    return `R$ ${(value / 1_000_000_000_000).toFixed(1).replace('.', ',')} trilhoes`
+  }
   if (value >= 1_000_000_000) {
-    return `R$ ${(value / 1_000_000_000).toFixed(1).replace('.', ',')} bi`
+    return `R$ ${(value / 1_000_000_000).toFixed(1).replace('.', ',')} bilhoes`
   }
   if (value >= 1_000_000) {
-    return `R$ ${(value / 1_000_000).toFixed(1).replace('.', ',')} mi`
+    return `R$ ${(value / 1_000_000).toFixed(1).replace('.', ',')} milhoes`
   }
   if (value >= 1_000) {
     return `R$ ${(value / 1_000).toFixed(1).replace('.', ',')} mil`

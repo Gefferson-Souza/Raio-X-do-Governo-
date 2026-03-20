@@ -201,6 +201,19 @@ function formatDateBR(date: Date): string {
 }
 
 export async function fetchRecentContracts(days: number = 30): Promise<Contrato[]> {
+  const contracts = await fetchContractsForPeriod(days)
+
+  // Fallback: if current date range returns nothing (common when data lags behind),
+  // try the same period from the previous year
+  if (contracts.length === 0) {
+    console.warn('[transparency] No contracts found for current period, trying previous year fallback')
+    return fetchContractsForPreviousYear()
+  }
+
+  return contracts
+}
+
+async function fetchContractsForPeriod(days: number): Promise<Contrato[]> {
   const today = new Date()
   const past = new Date(today)
   past.setDate(today.getDate() - days)
@@ -217,6 +230,30 @@ export async function fetchRecentContracts(days: number = 30): Promise<Contrato[
       await delay(INTER_REQUEST_DELAY_MS)
     } catch (error) {
       console.error(`[transparency] Failed to fetch contracts for orgao ${codigoOrgao}:`, error)
+    }
+  }
+
+  return allContracts
+}
+
+async function fetchContractsForPreviousYear(): Promise<Contrato[]> {
+  const now = new Date()
+  const previousYear = now.getFullYear() - 1
+  const fallbackEnd = new Date(previousYear, now.getMonth(), now.getDate())
+  const fallbackStart = new Date(previousYear, 0, 1)
+
+  const dataFinal = formatDateBR(fallbackEnd)
+  const dataInicial = formatDateBR(fallbackStart)
+
+  const allContracts: Contrato[] = []
+
+  for (const codigoOrgao of TOP_ORGAOS_SUPERIORES.slice(0, 8)) {
+    try {
+      const batch = await fetchContratos(dataInicial, dataFinal, codigoOrgao, 1)
+      allContracts.push(...batch)
+      await delay(INTER_REQUEST_DELAY_MS)
+    } catch (error) {
+      console.error(`[transparency] Fallback fetch failed for orgao ${codigoOrgao}:`, error)
     }
   }
 

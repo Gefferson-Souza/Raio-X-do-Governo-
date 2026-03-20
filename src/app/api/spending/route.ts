@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { getSpendingData } from '@/lib/services/spending-service'
 
 export async function GET() {
-  const summary = await getSpendingData(2025)
+  const summary = await getSpendingData(2026)
 
   const headers: Record<string, string> = {
     'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',

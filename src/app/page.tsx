@@ -3,6 +3,7 @@ import { getRecentContracts } from '@/lib/services/contracts-service'
 import { convertToEquivalences } from '@/lib/utils/equivalences'
 import { humanizeNumber } from '@/lib/utils/format'
 import { REFERENCES } from '@/lib/utils/constants'
+import { pickRandomComparisons } from '@/lib/utils/comparisons'
 import { CounterHero } from '@/components/ui/counter-hero'
 import { ContractCard } from '@/components/ui/contract-card'
 import { CtaBanner } from '@/components/ui/cta-banner'
@@ -46,8 +47,11 @@ function pickBorderColor(index: number): string {
   return colors[index % colors.length]
 }
 
-function formatDateBR(isoDate: string): string {
-  const [year, month, day] = isoDate.split('-')
+function formatDateBR(isoDate: string | null | undefined): string {
+  if (!isoDate) return 'N/A'
+  const parts = isoDate.split('-')
+  if (parts.length < 3) return isoDate
+  const [year, month, day] = parts
   return `${day}/${month}/${year}`
 }
 
@@ -108,6 +112,7 @@ export default async function Home() {
   const perFamilyValue = formatPerFamily(totalPago)
   const perDayValue = formatPerDay(totalPago, dayOfYear)
   const salariosPerCapita = formatSalariosPerCapita(totalPago)
+  const sidebarComparisons = pickRandomComparisons(totalPago, 2)
 
   const totalPagoTrilhoes = (totalPago / 1_000_000_000_000).toFixed(1).replace('.', ',')
 
@@ -148,7 +153,7 @@ export default async function Home() {
         </span>
         <h1 className="font-headline font-black uppercase text-6xl md:text-8xl leading-none tracking-tighter text-on-surface">
           O CONTADOR<br />
-          DO <span className="text-error">SUMICO</span>
+          DO <span className="text-error">SUMIÇO</span>
         </h1>
         <p className="mt-4 font-body italic text-lg text-on-surface-variant max-w-2xl">
           Acompanhe em tempo real quanto dinheiro publico esta sendo gasto pelo governo federal.
@@ -208,45 +213,33 @@ export default async function Home() {
               />
             </div>
 
-            {/* RIGHT: Per Capita Summary */}
+            {/* RIGHT: Rotating Dynamic Comparisons */}
             <div className="lg:col-span-4 bg-white p-6 lg:p-8 flex flex-row lg:flex-col justify-center gap-4 lg:gap-8">
-              <div className="flex-1 border-l-4 border-error pl-4 lg:border-l-0 lg:pl-0">
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="w-10 h-10 bg-error flex items-center justify-center shrink-0">
-                    <span className="material-symbols-outlined text-on-error" style={{ fontSize: 22 }} aria-hidden="true">
-                      person
+              {sidebarComparisons.map((comp, idx) => (
+                <div key={comp.icon}>
+                  <div className={`flex-1 border-l-4 ${comp.borderColor} pl-4 lg:border-l-0 lg:pl-0`}>
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className={`w-10 h-10 ${comp.bgColor} flex items-center justify-center shrink-0`}>
+                        <span className={`material-symbols-outlined ${comp.iconTextColor}`} style={{ fontSize: 22 }} aria-hidden="true">
+                          {comp.icon}
+                        </span>
+                      </div>
+                      <span className="text-xs font-bold uppercase font-label text-on-surface-variant tracking-widest">
+                        {comp.label}
+                      </span>
+                    </div>
+                    <span className="text-3xl font-black font-headline tracking-tighter text-on-surface">
+                      {comp.value}
                     </span>
+                    <p className="text-xs font-body text-on-surface-variant mt-1">
+                      {comp.desc}
+                    </p>
                   </div>
-                  <span className="text-xs font-bold uppercase font-label text-on-surface-variant tracking-widest">
-                    POR BRASILEIRO
-                  </span>
+                  {idx < sidebarComparisons.length - 1 && (
+                    <div className="hidden lg:block border-t border-outline-variant mt-4" />
+                  )}
                 </div>
-                <span className="text-3xl font-black font-headline tracking-tighter text-on-surface">
-                  {perCapitaValue}
-                </span>
-                <p className="text-xs font-body text-on-surface-variant mt-1">
-                  Se dividissemos igualmente entre todos os 213 milhoes de habitantes
-                </p>
-              </div>
-              <div className="hidden lg:block border-t border-outline-variant" />
-              <div className="flex-1 border-l-4 border-secondary pl-4 lg:border-l-0 lg:pl-0">
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="w-10 h-10 bg-secondary-container flex items-center justify-center shrink-0">
-                    <span className="material-symbols-outlined text-on-secondary-container" style={{ fontSize: 22 }} aria-hidden="true">
-                      family_restroom
-                    </span>
-                  </div>
-                  <span className="text-xs font-bold uppercase font-label text-on-surface-variant tracking-widest">
-                    POR FAMILIA DE 4
-                  </span>
-                </div>
-                <span className="text-3xl font-black font-headline tracking-tighter text-on-surface">
-                  {perFamilyValue}
-                </span>
-                <p className="text-xs font-body text-on-surface-variant mt-1">
-                  O equivalente ao preco de um carro popular
-                </p>
-              </div>
+              ))}
             </div>
           </div>
         </section>
@@ -321,12 +314,12 @@ export default async function Home() {
             {topContracts.map((contrato, index) => (
               <ContractCard
                 key={contrato.id}
-                icon={pickContractIcon(contrato.compra.objeto)}
-                title={contrato.compra.objeto}
-                description={`${contrato.fornecedor.nome} - CNPJ: ${contrato.fornecedor.cnpjFormatado}`}
-                value={humanizeNumber(contrato.valorFinalCompra)}
-                category={contrato.unidadeGestora.orgaoVinculado.nome}
-                status={`CONTRATO ${contrato.compra.numero} - VIGENCIA ATE ${formatDateBR(contrato.dataFimVigencia)}`}
+                icon={pickContractIcon(contrato.compra?.objeto ?? '')}
+                title={contrato.compra?.objeto ?? 'Sem descricao'}
+                description={`${contrato.fornecedor?.nome ?? 'N/A'} - CNPJ: ${contrato.fornecedor?.cnpjFormatado ?? 'N/A'}`}
+                value={humanizeNumber(contrato.valorFinalCompra ?? 0)}
+                category={contrato.unidadeGestora?.orgaoVinculado?.nome ?? 'Orgao nao informado'}
+                status={`CONTRATO ${contrato.compra?.numero ?? 'N/A'} - VIGENCIA ATE ${formatDateBR(contrato.dataFimVigencia)}`}
                 borderColor={pickBorderColor(index)}
               />
             ))}
