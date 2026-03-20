@@ -80,7 +80,7 @@ const TIMELINE_STATUSES = ['pago', 'auditado', 'pendente', 'suspeito'] as const
 
 export default async function RankingPage() {
   const [spendingSummary, contractsResult] = await Promise.all([
-    getSpendingData(2025),
+    getSpendingData(2026),
     getRecentContracts(30),
   ])
 
@@ -282,10 +282,10 @@ export default async function RankingPage() {
                 </p>
               </div>
               <Link
-                href="/dossies"
+                href="/carrinho"
                 className="inline-flex items-center gap-2 bg-secondary-container text-on-secondary-container px-8 py-4 font-label text-sm font-black uppercase tracking-wider hover:bg-yellow-300 transition-colors shrink-0"
               >
-                ACESSAR DOSSIES COMPLETOS
+                VER TODOS OS GASTOS
               </Link>
             </div>
           </div>

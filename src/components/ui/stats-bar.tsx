@@ -1,5 +1,6 @@
 interface StatsBarItem {
   readonly label: string
+  readonly subtitle: string
   readonly value: string
   readonly bgClass: string
   readonly textClass: string
@@ -19,6 +20,9 @@ export function StatsBar({ items }: StatsBarProps) {
           </span>
           <span className="block text-3xl font-black tracking-tighter font-headline">
             {item.value}
+          </span>
+          <span className="block text-[11px] mt-1 opacity-80 font-body">
+            {item.subtitle}
           </span>
         </div>
       ))}

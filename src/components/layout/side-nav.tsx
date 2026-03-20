@@ -54,13 +54,15 @@ export function SideNav() {
       </nav>
 
       <div className="px-4 py-6 border-t border-slate-200">
-        <Link
-          href="/denunciar"
+        <a
+          href="https://falabr.cgu.gov.br"
+          target="_blank"
+          rel="noopener noreferrer"
           className="flex items-center justify-center gap-2 w-full py-3 bg-error text-white font-label text-sm font-bold uppercase tracking-wider hover:opacity-90 transition-opacity"
         >
           <MaterialIcon icon="campaign" size={20} />
           DENUNCIAR GASTO
-        </Link>
+        </a>
       </div>
     </aside>
   )

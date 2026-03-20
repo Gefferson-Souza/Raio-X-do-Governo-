@@ -5,9 +5,9 @@ import { usePathname } from "next/navigation"
 import { MaterialIcon } from "@/components/icons/material-icon"
 
 const NAV_LINKS = [
-  { href: "/gastos", label: "GASTOS REAIS" },
-  { href: "/dossies", label: "DOSSIÊS" },
-  { href: "/mapa", label: "MAPA" },
+  { href: "/carrinho", label: "GASTOS REAIS" },
+  { href: "/ranking", label: "RANKING" },
+  { href: "/gerador", label: "GERADOR DE IMPACTO" },
 ] as const
 
 export function TopNav() {

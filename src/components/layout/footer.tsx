@@ -1,9 +1,9 @@
 import Link from "next/link"
 
 const FOOTER_LINKS = [
-  { href: "/termos", label: "Termos de Uso" },
-  { href: "/privacidade", label: "Privacidade" },
-  { href: "/api", label: "API do Governo" },
+  { href: "#", label: "Termos de Uso", external: false },
+  { href: "#", label: "Privacidade", external: false },
+  { href: "https://portaldatransparencia.gov.br/api-de-dados", label: "API do Governo", external: true },
 ] as const
 
 export function Footer() {
@@ -20,14 +20,26 @@ export function Footer() {
         </p>
 
         <nav className="flex items-center gap-6">
-          {FOOTER_LINKS.map(({ href, label }) => (
-            <Link
-              key={href}
-              href={href}
-              className="font-label text-xs uppercase tracking-wider text-white/70 hover:text-white transition-colors"
-            >
-              {label}
-            </Link>
+          {FOOTER_LINKS.map(({ href, label, external }) => (
+            external ? (
+              <a
+                key={label}
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-label text-xs uppercase tracking-wider text-white/70 hover:text-white transition-colors"
+              >
+                {label}
+              </a>
+            ) : (
+              <Link
+                key={label}
+                href={href}
+                className="font-label text-xs uppercase tracking-wider text-white/70 hover:text-white transition-colors"
+              >
+                {label}
+              </Link>
+            )
           ))}
         </nav>
       </div>
