@@ -58,4 +58,5 @@ export interface SpendingSummary {
   totalLiquidado: number
   porOrgao: DespesaPorOrgao[]
   atualizadoEm: string
+  source: 'live' | 'cached' | 'error'
 }

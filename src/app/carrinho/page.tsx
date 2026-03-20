@@ -1,9 +1,13 @@
 import { MaterialIcon } from '@/components/icons/material-icon'
+import { getSpendingData } from '@/lib/services/spending-service'
+import { humanizeNumber } from '@/lib/utils/format'
+
+export const revalidate = 300
 
 const BADGE_STYLES: Record<string, string> = {
   VERIFICADO: 'bg-secondary-container text-on-secondary-container',
   'CONTRATO ATIVO': 'bg-tertiary-container text-on-tertiary-container',
-  'DENÚNCIA': 'bg-error-container text-on-error-container',
+  'DENUNCIA': 'bg-error-container text-on-error-container',
   VAZAMENTO: 'bg-error text-on-error',
   SUPERFATURADO: 'bg-error-container text-on-error-container',
   EXTERNO: 'bg-surface-container-high text-on-surface-variant',
@@ -16,44 +20,44 @@ const CART_ITEMS = [
       'Compra recorrente de lagostas, vinhos importados e cortes nobres para eventos oficiais em gabinetes ministeriais.',
     costLabel: 'R$ 2.400,00',
     costUnit: '/unidade',
-    equivalence: '1 JANTA = 12 CESTAS BÁSICAS',
+    equivalence: '1 JANTA = 12 CESTAS BASICAS',
     badge: 'VERIFICADO',
     icon: 'restaurant',
   },
   {
-    title: 'Sofá de Veludo de Grife',
+    title: 'Sofa de Veludo de Grife',
     description:
-      'Aquisição de mobiliário italiano de luxo para salas de reunião em órgãos federais com dispensa de licitação.',
+      'Aquisicao de mobiliario italiano de luxo para salas de reuniao em orgaos federais com dispensa de licitacao.',
     costLabel: 'R$ 65.000,00',
     costUnit: '/unidade',
-    equivalence: '1 SOFÁ = 260 CONSULTAS SUS',
+    equivalence: '1 SOFA = 260 CONSULTAS SUS',
     badge: 'CONTRATO ATIVO',
     icon: 'chair',
   },
   {
     title: 'Canetas Tinteiro Ouro 18k',
     description:
-      'Canetas banhadas a ouro com gravação personalizada para cerimoniais de assinatura de atos oficiais.',
+      'Canetas banhadas a ouro com gravacao personalizada para cerimoniais de assinatura de atos oficiais.',
     costLabel: 'R$ 12.800,00',
     costUnit: '/unidade',
     equivalence: '1 CANETA = 80 KITS ESCOLARES',
-    badge: 'DENÚNCIA',
+    badge: 'DENUNCIA',
     icon: 'edit',
   },
   {
     title: 'Fretamento de Jato Executivo',
     description:
-      'Fretamento de aeronaves particulares para deslocamento de autoridades em trechos com voos comerciais disponíveis.',
+      'Fretamento de aeronaves particulares para deslocamento de autoridades em trechos com voos comerciais disponiveis.',
     costLabel: 'R$ 180.000,00',
     costUnit: '/hora',
-    equivalence: '1 VOO = 1 AMBULÂNCIA NOVA',
+    equivalence: '1 VOO = 1 AMBULANCIA NOVA',
     badge: 'VAZAMENTO',
     icon: 'flight',
   },
   {
     title: 'Reforma de Banheiro Carrara',
     description:
-      'Reforma completa com mármore carrara importado, louças de design europeu e metais banhados a ouro.',
+      'Reforma completa com marmore carrara importado, loucas de design europeu e metais banhados a ouro.',
     costLabel: 'R$ 420.000,00',
     costUnit: '',
     equivalence: '1 REFORMA = 12 CASAS POPULARES',
@@ -61,18 +65,22 @@ const CART_ITEMS = [
     icon: 'bathroom',
   },
   {
-    title: 'Cafeteira Profissional Suíça',
+    title: 'Cafeteira Profissional Suica',
     description:
-      'Equipamento profissional de preparo de café com cápsulas importadas e contrato de manutenção premium.',
+      'Equipamento profissional de preparo de cafe com capsulas importadas e contrato de manutencao premium.',
     costLabel: 'R$ 28.500,00',
     costUnit: '/unidade',
-    equivalence: '1 CAFÉ = 5600 MERENDAS ESCOLARES',
+    equivalence: '1 CAFE = 5600 MERENDAS ESCOLARES',
     badge: 'EXTERNO',
     icon: 'coffee',
   },
 ] as const
 
-export default function CarrinhoPage() {
+export default async function CarrinhoPage() {
+  const spendingSummary = await getSpendingData(2025)
+
+  const isError = spendingSummary.source === 'error'
+
   return (
     <div className="pb-12 lg:pl-8 px-4 md:px-8">
       <section className="bg-primary-container p-8 md:p-12">
@@ -83,38 +91,56 @@ export default function CarrinhoPage() {
           CARRINHO DE COMPRAS DO GOVERNO
         </h1>
         <p className="mt-4 text-lg font-body text-on-primary-container/80 max-w-3xl">
-          Auditoria cidadã dos itens de luxo adquiridos com dinheiro público.
-          Cada produto aqui foi comprado pelo governo federal e está registrado
-          no Portal da Transparência ou no Diário Oficial da União.
+          Auditoria cidada dos itens de luxo adquiridos com dinheiro publico.
+          Cada produto aqui foi comprado pelo governo federal e esta registrado
+          no Portal da Transparencia ou no Diario Oficial da Uniao.
         </p>
       </section>
 
       <section className="grid grid-cols-1 md:grid-cols-3 gap-0">
         <div className="p-6 bg-emerald-900">
           <span className="block text-xs uppercase tracking-widest font-label text-yellow-400">
-            Total em Luxos
+            Total Pago (2025)
           </span>
           <span className="block text-3xl font-black tracking-tighter font-headline text-white">
-            R$ 4.298.400,00
+            {isError ? 'INDISPONIVEL' : humanizeNumber(spendingSummary.totalPago)}
           </span>
         </div>
         <div className="p-6 bg-yellow-400">
           <span className="block text-xs uppercase tracking-widest font-label text-emerald-950">
-            Itens de Ostentação
+            Total Empenhado
           </span>
           <span className="block text-3xl font-black tracking-tighter font-headline text-emerald-950">
-            142 UNIDADES
+            {isError ? 'INDISPONIVEL' : humanizeNumber(spendingSummary.totalEmpenhado)}
           </span>
         </div>
         <div className="p-6 bg-surface-container-highest">
           <span className="block text-xs uppercase tracking-widest font-label text-on-surface-variant">
-            Média de Superfaturamento
+            Total Liquidado
           </span>
           <span className="block text-3xl font-black tracking-tighter font-headline text-error">
-            +420% ACIMA DO MERCADO
+            {isError ? 'INDISPONIVEL' : humanizeNumber(spendingSummary.totalLiquidado)}
           </span>
         </div>
       </section>
+
+      {isError && (
+        <section className="mt-8">
+          <div className="bg-error-container border-2 border-error p-6">
+            <div className="flex items-center gap-3">
+              <MaterialIcon icon="error" className="text-error text-2xl" />
+              <div>
+                <h3 className="font-headline font-black uppercase text-lg text-on-error-container">
+                  DADOS EM TEMPO REAL INDISPONIVEIS
+                </h3>
+                <p className="font-body text-sm text-on-error-container/80">
+                  Os valores do Portal da Transparencia nao puderam ser carregados. Os itens abaixo sao baseados em registros publicos.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
 
       <section className="mt-12">
         <div className="grid gap-8" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))' }}>
@@ -175,11 +201,11 @@ export default function CarrinhoPage() {
 
       <section className="text-center mt-20">
         <h2 className="text-3xl font-black uppercase font-headline text-on-surface mb-4">
-          Viu algo suspeito no diário oficial?
+          Viu algo suspeito no diario oficial?
         </h2>
         <p className="text-on-surface-variant font-body mb-8 max-w-xl mx-auto">
-          Denuncie gastos abusivos ou compartilhe esta investigação para que
-          mais brasileiros tenham acesso à verdade.
+          Denuncie gastos abusivos ou compartilhe esta investigacao para que
+          mais brasileiros tenham acesso a verdade.
         </p>
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           <a
@@ -194,11 +220,11 @@ export default function CarrinhoPage() {
             className="inline-flex items-center gap-2 bg-secondary-container text-on-secondary-container font-label font-bold uppercase tracking-wider px-8 py-4 hover:opacity-90 transition-opacity"
           >
             <MaterialIcon icon="share" size={20} />
-            COMPARTILHAR O ESCÂNDALO
+            COMPARTILHAR O ESCANDALO
           </a>
         </div>
         <p className="mt-8 text-xs font-label text-on-surface-variant uppercase tracking-widest">
-          Fonte: Portal da Transparência & Diário Oficial da União
+          Fonte: Portal da Transparencia & Diario Oficial da Uniao
         </p>
       </section>
     </div>

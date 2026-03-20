@@ -72,9 +72,26 @@ describe('API types', () => {
         totalLiquidado: 5_500_000,
         porOrgao: [],
         atualizadoEm: '2025-07-01T12:00:00.000Z',
+        source: 'live',
       }
       expect(summary.totalPago).toBe(5_000_000)
       expect(summary.porOrgao).toEqual([])
+      expect(summary.source).toBe('live')
+    })
+
+    it('accepts all valid source values', () => {
+      const sources: SpendingSummary['source'][] = ['live', 'cached', 'error']
+      for (const source of sources) {
+        const summary: SpendingSummary = {
+          totalPago: 0,
+          totalEmpenhado: 0,
+          totalLiquidado: 0,
+          porOrgao: [],
+          atualizadoEm: '2025-07-01T12:00:00.000Z',
+          source,
+        }
+        expect(summary.source).toBe(source)
+      }
     })
   })
 })

@@ -122,6 +122,9 @@ export async function fetchCEIS(pagina: number = 1): Promise<EmpresaSancionada[]
   })
 }
 
+const MAX_PAGES = 20
+const INTER_PAGE_DELAY_MS = 200
+
 export async function fetchSpendingSummary(ano: number): Promise<SpendingSummary> {
   const allDespesas: DespesaPorOrgao[] = []
   let pagina = 1
@@ -131,7 +134,11 @@ export async function fetchSpendingSummary(ano: number): Promise<SpendingSummary
     batch = await fetchDespesasPorOrgao(ano, pagina)
     allDespesas.push(...batch)
     pagina++
-  } while (batch.length > 0)
+
+    if (batch.length > 0 && pagina <= MAX_PAGES) {
+      await delay(INTER_PAGE_DELAY_MS)
+    }
+  } while (batch.length > 0 && pagina <= MAX_PAGES)
 
   const totals = allDespesas.reduce(
     (acc, item) => ({
@@ -146,5 +153,40 @@ export async function fetchSpendingSummary(ano: number): Promise<SpendingSummary
     ...totals,
     porOrgao: allDespesas,
     atualizadoEm: new Date().toISOString(),
+    source: 'live',
   }
+}
+
+function formatDateBR(date: Date): string {
+  const day = String(date.getDate()).padStart(2, '0')
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const year = date.getFullYear()
+  return `${day}/${month}/${year}`
+}
+
+export async function fetchRecentContracts(days: number = 30): Promise<Contrato[]> {
+  const today = new Date()
+  const past = new Date(today)
+  past.setDate(today.getDate() - days)
+
+  const dataFinal = formatDateBR(today)
+  const dataInicial = formatDateBR(past)
+
+  const allContracts: Contrato[] = []
+  const maxPages = 3
+
+  for (let pagina = 1; pagina <= maxPages; pagina++) {
+    const batch = await fetchContratos(dataInicial, dataFinal, pagina)
+    allContracts.push(...batch)
+
+    if (batch.length === 0) {
+      break
+    }
+
+    if (pagina < maxPages) {
+      await delay(INTER_PAGE_DELAY_MS)
+    }
+  }
+
+  return allContracts
 }

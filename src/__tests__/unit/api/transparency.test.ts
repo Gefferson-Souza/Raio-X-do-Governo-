@@ -178,6 +178,7 @@ describe('transparency API client', () => {
       expect(summary.totalLiquidado).toBe(560)
       expect(summary.porOrgao).toHaveLength(3)
       expect(summary.atualizadoEm).toBeDefined()
+      expect(summary.source).toBe('live')
     })
 
     it('returns zeros when no data is available', async () => {
@@ -191,6 +192,7 @@ describe('transparency API client', () => {
       expect(summary.totalEmpenhado).toBe(0)
       expect(summary.totalLiquidado).toBe(0)
       expect(summary.porOrgao).toHaveLength(0)
+      expect(summary.source).toBe('live')
     })
   })
 })

@@ -1,5 +1,5 @@
-import { getCached, setCache } from '@/lib/api/cache'
-import type { SpendingSummary, Contrato } from '@/lib/api/types'
+import { getSpendingData } from '@/lib/services/spending-service'
+import { getRecentContracts } from '@/lib/services/contracts-service'
 import { convertToEquivalences } from '@/lib/utils/equivalences'
 import { humanizeNumber } from '@/lib/utils/format'
 import { CounterHero } from '@/components/ui/counter-hero'
@@ -9,6 +9,8 @@ import { CtaBanner } from '@/components/ui/cta-banner'
 import { StatsBar } from '@/components/ui/stats-bar'
 import { MaterialIcon } from '@/components/icons/material-icon'
 import Link from 'next/link'
+
+export const revalidate = 300
 
 const CONTRACT_ICONS: Record<string, string> = {
   'TRANSPORTE': 'flight',
@@ -49,96 +51,18 @@ function formatDateBR(isoDate: string): string {
   return `${day}/${month}/${year}`
 }
 
-const MOCK_SUMMARY: SpendingSummary = {
-  totalPago: 1_892_400_000_000,
-  totalEmpenhado: 2_145_700_000_000,
-  totalLiquidado: 1_998_300_000_000,
-  porOrgao: [],
-  atualizadoEm: new Date().toISOString(),
-}
-
-const MOCK_CONTRATOS: Contrato[] = [
-  {
-    id: 88201,
-    dataAssinatura: '2026-03-10',
-    dataFimVigencia: '2026-12-31',
-    dataInicioVigencia: '2026-03-15',
-    dimCompra: {
-      numero: '00012/2026',
-      objeto: 'SERVICOS DE TRANSPORTE AEREO PARA COMITIVA PRESIDENCIAL',
-    },
-    fornecedor: { cnpjCpf: '12.345.678/0001-90', nome: 'AEROSERVICE TRANSPORTES EXECUTIVOS LTDA' },
-    unidadeGestora: {
-      codigo: '110001',
-      nome: 'PRESIDENCIA DA REPUBLICA',
-      orgaoVinculado: { codigo: '20000', nome: 'PRESIDENCIA DA REPUBLICA' },
-    },
-    valorFinal: 4_800_000,
-    valorInicial: 3_200_000,
-  },
-]
-
-async function getSpendingSummary(): Promise<SpendingSummary> {
-  const CACHE_KEY = 'spending-summary-2025'
-  const CACHE_TTL_SECONDS = 300
-
-  const cached = await getCached<SpendingSummary>(CACHE_KEY)
-  if (cached) return cached
-
-  const apiKey = process.env.TRANSPARENCY_API_KEY
-  if (!apiKey) {
-    await setCache(CACHE_KEY, MOCK_SUMMARY, CACHE_TTL_SECONDS)
-    return MOCK_SUMMARY
-  }
-
-  try {
-    const { fetchSpendingSummary } = await import('@/lib/api/transparency')
-    const summary = await fetchSpendingSummary(2025)
-    await setCache(CACHE_KEY, summary, CACHE_TTL_SECONDS)
-    return summary
-  } catch {
-    await setCache(CACHE_KEY, MOCK_SUMMARY, CACHE_TTL_SECONDS)
-    return MOCK_SUMMARY
-  }
-}
-
-async function getRecentContratos(): Promise<Contrato[]> {
-  const CACHE_KEY = 'contratos-recent'
-  const CACHE_TTL_SECONDS = 300
-
-  const cached = await getCached<Contrato[]>(CACHE_KEY)
-  if (cached) return cached
-
-  const apiKey = process.env.TRANSPARENCY_API_KEY
-  if (!apiKey) {
-    await setCache(CACHE_KEY, MOCK_CONTRATOS, CACHE_TTL_SECONDS)
-    return MOCK_CONTRATOS
-  }
-
-  try {
-    const { fetchContratos } = await import('@/lib/api/transparency')
-    const today = new Date()
-    const dataFinal = today.toISOString().split('T')[0]
-    const pastDate = new Date(today)
-    pastDate.setDate(today.getDate() - 30)
-    const dataInicial = pastDate.toISOString().split('T')[0]
-    const contratos = await fetchContratos(dataInicial, dataFinal, 1)
-    await setCache(CACHE_KEY, contratos, CACHE_TTL_SECONDS)
-    return contratos
-  } catch {
-    await setCache(CACHE_KEY, MOCK_CONTRATOS, CACHE_TTL_SECONDS)
-    return MOCK_CONTRATOS
-  }
-}
-
 export default async function Home() {
-  const [spendingSummary, contratos] = await Promise.all([
-    getSpendingSummary(),
-    getRecentContratos(),
+  const [spendingSummary, contractsResult] = await Promise.all([
+    getSpendingData(2025),
+    getRecentContracts(30),
   ])
+
+  const isSpendingError = spendingSummary.source === 'error'
+  const isContractsError = contractsResult.source === 'error'
 
   const { totalPago, totalEmpenhado, totalLiquidado } = spendingSummary
   const equivalences = convertToEquivalences(totalPago)
+  const contratos = contractsResult.data
 
   const topContracts = [...contratos]
     .sort((a, b) => b.valorFinal - a.valorFinal)
@@ -147,19 +71,19 @@ export default async function Home() {
   const statsItems = [
     {
       label: 'TOTAL EMPENHADO',
-      value: humanizeNumber(totalEmpenhado),
+      value: isSpendingError ? 'INDISPONIVEL' : humanizeNumber(totalEmpenhado),
       bgClass: 'bg-emerald-900',
       textClass: 'text-white',
     },
     {
       label: 'TOTAL LIQUIDADO',
-      value: humanizeNumber(totalLiquidado),
+      value: isSpendingError ? 'INDISPONIVEL' : humanizeNumber(totalLiquidado),
       bgClass: 'bg-secondary-container',
       textClass: 'text-on-secondary-container',
     },
     {
       label: 'TOTAL PAGO',
-      value: humanizeNumber(totalPago),
+      value: isSpendingError ? 'INDISPONIVEL' : humanizeNumber(totalPago),
       bgClass: 'bg-error-container',
       textClass: 'text-white',
     },
@@ -185,49 +109,70 @@ export default async function Home() {
       {/* STATS BAR */}
       <StatsBar items={[...statsItems]} />
 
-      {/* BIG COUNTER SECTION */}
-      <section className="mx-4 lg:mx-12 my-8">
-        <div className="grid grid-cols-1 lg:grid-cols-12 border-4 border-emerald-950 bg-white hard-shadow">
-          {/* LEFT: Counter Hero */}
-          <div className="lg:col-span-8 min-h-[280px]">
-            <CounterHero
-              value={totalPago}
-              label="TOTAL PAGO EM 2026"
-              source="Portal da Transparencia - Dados Abertos"
-            />
+      {/* ERROR STATE FOR SPENDING */}
+      {isSpendingError && (
+        <section className="mx-4 lg:mx-12 my-4">
+          <div className="bg-error-container border-2 border-error p-6">
+            <div className="flex items-center gap-3">
+              <MaterialIcon icon="error" className="text-error text-2xl" />
+              <div>
+                <h3 className="font-headline font-black uppercase text-lg text-on-error-container">
+                  DADOS INDISPONIVEIS
+                </h3>
+                <p className="font-body text-sm text-on-error-container/80">
+                  Nao foi possivel carregar os dados do Portal da Transparencia. Tente novamente em alguns minutos.
+                </p>
+              </div>
+            </div>
           </div>
+        </section>
+      )}
 
-          {/* RIGHT: KPI Equivalences */}
-          <div className="lg:col-span-4 bg-white p-6 lg:p-8 flex flex-row lg:flex-col justify-center gap-4 lg:gap-8">
-            <div className="flex-1 border-l-4 border-error pl-4 lg:border-l-0 lg:pl-0">
-              <KpiEquivalence
-                icon="school"
-                label="ESCOLAS FNDE"
-                value={equivalences.escolasFNDE.toLocaleString('pt-BR')}
-                description="Escolas que poderiam ser construidas com esse valor"
-                iconBgColor="bg-error"
-                iconTextColor="text-on-error"
+      {/* BIG COUNTER SECTION */}
+      {!isSpendingError && (
+        <section className="mx-4 lg:mx-12 my-8">
+          <div className="grid grid-cols-1 lg:grid-cols-12 border-4 border-emerald-950 bg-white hard-shadow">
+            {/* LEFT: Counter Hero */}
+            <div className="lg:col-span-8 min-h-[280px]">
+              <CounterHero
+                value={totalPago}
+                label="TOTAL PAGO EM 2025"
+                source="Portal da Transparencia - Dados Abertos"
               />
             </div>
-            <div className="hidden lg:block border-t border-outline-variant" />
-            <div className="flex-1 border-l-4 border-secondary pl-4 lg:border-l-0 lg:pl-0">
-              <KpiEquivalence
-                icon="payments"
-                label="SALARIOS MINIMOS"
-                value={equivalences.salariosMinimos.toLocaleString('pt-BR')}
-                description="Equivalente em salarios minimos de R$ 1.518"
-                iconBgColor="bg-secondary-container"
-                iconTextColor="text-on-secondary-container"
-              />
+
+            {/* RIGHT: KPI Equivalences */}
+            <div className="lg:col-span-4 bg-white p-6 lg:p-8 flex flex-row lg:flex-col justify-center gap-4 lg:gap-8">
+              <div className="flex-1 border-l-4 border-error pl-4 lg:border-l-0 lg:pl-0">
+                <KpiEquivalence
+                  icon="school"
+                  label="ESCOLAS FNDE"
+                  value={equivalences.escolasFNDE.toLocaleString('pt-BR')}
+                  description="Escolas que poderiam ser construidas com esse valor"
+                  iconBgColor="bg-error"
+                  iconTextColor="text-on-error"
+                />
+              </div>
+              <div className="hidden lg:block border-t border-outline-variant" />
+              <div className="flex-1 border-l-4 border-secondary pl-4 lg:border-l-0 lg:pl-0">
+                <KpiEquivalence
+                  icon="payments"
+                  label="SALARIOS MINIMOS"
+                  value={equivalences.salariosMinimos.toLocaleString('pt-BR')}
+                  description="Equivalente em salarios minimos de R$ 1.621"
+                  iconBgColor="bg-secondary-container"
+                  iconTextColor="text-on-secondary-container"
+                />
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* MOBILE CTA BUTTON */}
       <div className="px-6 -mt-6 relative z-20 md:hidden">
         <button className="w-full bg-secondary-container text-on-secondary-container font-headline font-black py-5 text-lg shadow-2xl border-b-4 border-secondary-dim active:translate-y-1 active:border-b-0 uppercase">
-          CALCULAR MEU PREJUÍZO
+          CALCULAR MEU PREJUIZO
         </button>
       </div>
 
@@ -239,7 +184,7 @@ export default async function Home() {
               DADOS ABERTOS
             </span>
             <h2 className="font-headline font-black uppercase text-4xl tracking-tighter text-on-surface">
-              CONTRATOS SUSPEITOS HOJE
+              CONTRATOS RECENTES
             </h2>
             <p className="mt-2 font-body text-sm text-on-surface-variant italic">
               Os maiores contratos assinados recentemente. Valores que merecem a sua atencao.
@@ -253,67 +198,90 @@ export default async function Home() {
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {topContracts.map((contrato, index) => (
-            <ContractCard
-              key={contrato.id}
-              icon={pickContractIcon(contrato.dimCompra.objeto)}
-              title={contrato.dimCompra.objeto}
-              description={`${contrato.fornecedor.nome} - CNPJ: ${contrato.fornecedor.cnpjCpf}`}
-              value={humanizeNumber(contrato.valorFinal)}
-              category={contrato.unidadeGestora.orgaoVinculado.nome}
-              status={`CONTRATO ${contrato.dimCompra.numero} - VIGENCIA ATE ${formatDateBR(contrato.dataFimVigencia)}`}
-              borderColor={pickBorderColor(index)}
-            />
-          ))}
-        </div>
+        {isContractsError && (
+          <div className="bg-error-container border-2 border-error p-6">
+            <div className="flex items-center gap-3">
+              <MaterialIcon icon="error" className="text-error text-2xl" />
+              <p className="font-body text-sm text-on-error-container">
+                Nao foi possivel carregar os contratos recentes. Tente novamente em alguns minutos.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {!isContractsError && topContracts.length === 0 && (
+          <div className="bg-surface-container p-6 text-center">
+            <p className="font-body text-sm text-on-surface-variant">
+              Nenhum contrato encontrado para o periodo selecionado.
+            </p>
+          </div>
+        )}
+
+        {!isContractsError && topContracts.length > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {topContracts.map((contrato, index) => (
+              <ContractCard
+                key={contrato.id}
+                icon={pickContractIcon(contrato.dimCompra.objeto)}
+                title={contrato.dimCompra.objeto}
+                description={`${contrato.fornecedor.nome} - CNPJ: ${contrato.fornecedor.cnpjCpf}`}
+                value={humanizeNumber(contrato.valorFinal)}
+                category={contrato.unidadeGestora.orgaoVinculado.nome}
+                status={`CONTRATO ${contrato.dimCompra.numero} - VIGENCIA ATE ${formatDateBR(contrato.dataFimVigencia)}`}
+                borderColor={pickBorderColor(index)}
+              />
+            ))}
+          </div>
+        )}
       </section>
 
       {/* EQUIVALENCES GRID */}
-      <section className="px-4 sm:px-6 lg:px-12 py-10 bg-surface">
-        <h2 className="font-headline font-black uppercase text-3xl tracking-tighter text-on-surface mb-2">
-          O QUE ESSE DINHEIRO COMPRARIA
-        </h2>
-        <p className="font-body text-sm text-on-surface-variant italic mb-8">
-          Traducao do gasto publico em coisas que voce entende.
-        </p>
+      {!isSpendingError && (
+        <section className="px-4 sm:px-6 lg:px-12 py-10 bg-surface">
+          <h2 className="font-headline font-black uppercase text-3xl tracking-tighter text-on-surface mb-2">
+            O QUE ESSE DINHEIRO COMPRARIA
+          </h2>
+          <p className="font-body text-sm text-on-surface-variant italic mb-8">
+            Traducao do gasto publico em coisas que voce entende.
+          </p>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <EquivalenceCard
-            icon="local_hospital"
-            label="CONSULTAS NO SUS"
-            value={equivalences.consultasSUS.toLocaleString('pt-BR')}
-            bgClass="bg-white"
-          />
-          <EquivalenceCard
-            icon="home"
-            label="CASAS POPULARES"
-            value={equivalences.casasPopulares.toLocaleString('pt-BR')}
-            bgClass="bg-white"
-          />
-          <EquivalenceCard
-            icon="lunch_dining"
-            label="MERENDAS ESCOLARES"
-            value={equivalences.merendas.toLocaleString('pt-BR')}
-            bgClass="bg-white"
-          />
-          <EquivalenceCard
-            icon="favorite"
-            label="CIRURGIAS CARDIACAS"
-            value={equivalences.cirurgiasCardiacas.toLocaleString('pt-BR')}
-            bgClass="bg-white"
-          />
-        </div>
-      </section>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <EquivalenceCard
+              icon="local_hospital"
+              label="CONSULTAS NO SUS"
+              value={equivalences.consultasSUS.toLocaleString('pt-BR')}
+              bgClass="bg-white"
+            />
+            <EquivalenceCard
+              icon="home"
+              label="CASAS POPULARES"
+              value={equivalences.casasPopulares.toLocaleString('pt-BR')}
+              bgClass="bg-white"
+            />
+            <EquivalenceCard
+              icon="lunch_dining"
+              label="MERENDAS ESCOLARES"
+              value={equivalences.merendas.toLocaleString('pt-BR')}
+              bgClass="bg-white"
+            />
+            <EquivalenceCard
+              icon="favorite"
+              label="CIRURGIAS CARDIACAS"
+              value={equivalences.cirurgiasCardiacas.toLocaleString('pt-BR')}
+              bgClass="bg-white"
+            />
+          </div>
+        </section>
+      )}
 
       {/* MOBILE VIRAL HASHTAG SECTION */}
       <section className="mt-12 bg-on-surface text-white p-8 mx-4 md:mx-0 md:hidden">
         <MaterialIcon icon="receipt_long" filled className="text-yellow-400 text-4xl mb-4" />
         <h2 className="font-headline font-black text-3xl uppercase leading-[0.9] tracking-tighter mb-4">
-          Seu imposto está pagando o silêncio.
+          Seu imposto esta pagando o silencio.
         </h2>
         <p className="font-body text-sm text-surface-variant mb-6 leading-relaxed">
-          Nas últimas 24 horas, o montante gasto poderia ter erradicado a fila de cirurgias eletivas em 12 estados.
+          Fiscalize os gastos publicos. Cada centavo deve ser justificado.
         </p>
         <div className="h-1 bg-yellow-400 w-16 mb-6" />
         <p className="font-label text-xs uppercase font-bold tracking-widest text-yellow-400">

@@ -48,26 +48,6 @@ const COMPARISON_OPTIONS: readonly ComparisonOption[] = [
   },
 ] as const
 
-const VIRAL_CARDS = [
-  {
-    item: 'Cartão Corporativo',
-    valor: 'R$ 2.800.000',
-    equivalencia: '11.200 consultas SUS',
-    shares: '14.2K',
-  },
-  {
-    item: 'Reforma de Gabinete',
-    valor: 'R$ 850.000',
-    equivalencia: '24 casas populares',
-    shares: '8.7K',
-  },
-  {
-    item: 'Viagem Presidencial',
-    valor: 'R$ 4.200.000',
-    equivalencia: '840.000 merendas',
-    shares: '22.1K',
-  },
-] as const
 
 function parseMoneyInput(raw: string): number {
   const cleaned = raw.replace(/[^\d,]/g, '').replace(',', '.')
@@ -242,33 +222,38 @@ export function ImpactGenerator() {
         </div>
       </div>
 
-      <div className="xl:col-span-12 mt-12">
-        <h3 className="text-xl font-black uppercase font-headline mb-6">
-          Últimos Cards Viralizados
-        </h3>
+      <div className="xl:col-span-12 mt-12 bg-surface-container-low p-8 hard-shadow">
+        <div className="flex items-center gap-3 mb-4">
+          <MaterialIcon icon="info" size={24} className="text-primary" />
+          <h3 className="text-xl font-black uppercase font-headline">
+            Como Funciona
+          </h3>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {VIRAL_CARDS.map((card) => (
-            <div
-              key={card.item}
-              className="bg-white border-t-4 border-primary hard-shadow p-6 flex flex-col gap-3"
-            >
-              <span className="font-label text-xs uppercase tracking-widest text-on-surface-variant">
-                {card.item}
-              </span>
-              <span className="text-2xl font-black font-headline text-error">
-                {card.valor}
-              </span>
-              <span className="text-sm font-bold font-body text-primary">
-                {card.equivalencia}
-              </span>
-              <div className="flex items-center gap-2 mt-auto pt-4 border-t border-outline-variant">
-                <MaterialIcon icon="trending_up" size={16} className="text-primary" />
-                <span className="font-label text-xs text-on-surface-variant">
-                  {card.shares} compartilhamentos
-                </span>
-              </div>
-            </div>
-          ))}
+          <div className="flex flex-col gap-2">
+            <span className="font-label text-xs uppercase tracking-widest text-on-surface-variant">
+              1. CONFIGURE
+            </span>
+            <p className="font-body text-sm text-on-surface-variant">
+              Escolha o tipo de gasto e insira o valor encontrado no Portal da Transparencia.
+            </p>
+          </div>
+          <div className="flex flex-col gap-2">
+            <span className="font-label text-xs uppercase tracking-widest text-on-surface-variant">
+              2. COMPARE
+            </span>
+            <p className="font-body text-sm text-on-surface-variant">
+              Selecione a area de comparacao: saude, educacao ou moradia popular.
+            </p>
+          </div>
+          <div className="flex flex-col gap-2">
+            <span className="font-label text-xs uppercase tracking-widest text-on-surface-variant">
+              3. COMPARTILHE
+            </span>
+            <p className="font-body text-sm text-on-surface-variant">
+              Baixe o card gerado e compartilhe nas redes sociais para informar mais pessoas.
+            </p>
+          </div>
         </div>
       </div>
     </div>
