@@ -24,12 +24,20 @@ describe('formatBRL', () => {
 })
 
 describe('humanizeNumber', () => {
+  it('humanizes trillions', () => {
+    expect(humanizeNumber(1_200_000_000_000)).toBe('R$ 1,2 trilhoes')
+  })
+
+  it('humanizes exact trillion', () => {
+    expect(humanizeNumber(1_000_000_000_000)).toBe('R$ 1,0 trilhoes')
+  })
+
   it('humanizes billions', () => {
-    expect(humanizeNumber(1_200_000_000)).toBe('R$ 1,2 bi')
+    expect(humanizeNumber(1_200_000_000)).toBe('R$ 1,2 bilhoes')
   })
 
   it('humanizes millions', () => {
-    expect(humanizeNumber(45_000_000)).toBe('R$ 45,0 mi')
+    expect(humanizeNumber(45_000_000)).toBe('R$ 45,0 milhoes')
   })
 
   it('humanizes thousands', () => {
@@ -41,11 +49,11 @@ describe('humanizeNumber', () => {
   })
 
   it('humanizes exact billion', () => {
-    expect(humanizeNumber(1_000_000_000)).toBe('R$ 1,0 bi')
+    expect(humanizeNumber(1_000_000_000)).toBe('R$ 1,0 bilhoes')
   })
 
   it('humanizes exact million', () => {
-    expect(humanizeNumber(1_000_000)).toBe('R$ 1,0 mi')
+    expect(humanizeNumber(1_000_000)).toBe('R$ 1,0 milhoes')
   })
 
   it('humanizes exact thousand', () => {
