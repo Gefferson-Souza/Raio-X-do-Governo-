@@ -1,5 +1,5 @@
 export const REFERENCES = {
-  salarioMinimo: 1518.00,
+  salarioMinimo: 1621.00,
   cestaBasica: 600.00,
   escolaFNDE: 33_400_000,
   kitEscolar: 160.00,

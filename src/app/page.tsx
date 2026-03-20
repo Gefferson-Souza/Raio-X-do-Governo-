@@ -1,4 +1,5 @@
-import { mockSpendingSummary, mockContratos } from '@/lib/mock-data'
+import { getCached, setCache } from '@/lib/api/cache'
+import type { SpendingSummary, Contrato } from '@/lib/api/types'
 import { convertToEquivalences } from '@/lib/utils/equivalences'
 import { humanizeNumber } from '@/lib/utils/format'
 import { CounterHero } from '@/components/ui/counter-hero'
@@ -48,11 +49,98 @@ function formatDateBR(isoDate: string): string {
   return `${day}/${month}/${year}`
 }
 
-export default function Home() {
-  const { totalPago, totalEmpenhado, totalLiquidado } = mockSpendingSummary
+const MOCK_SUMMARY: SpendingSummary = {
+  totalPago: 1_892_400_000_000,
+  totalEmpenhado: 2_145_700_000_000,
+  totalLiquidado: 1_998_300_000_000,
+  porOrgao: [],
+  atualizadoEm: new Date().toISOString(),
+}
+
+const MOCK_CONTRATOS: Contrato[] = [
+  {
+    id: 88201,
+    dataAssinatura: '2026-03-10',
+    dataFimVigencia: '2026-12-31',
+    dataInicioVigencia: '2026-03-15',
+    dimCompra: {
+      numero: '00012/2026',
+      objeto: 'SERVICOS DE TRANSPORTE AEREO PARA COMITIVA PRESIDENCIAL',
+    },
+    fornecedor: { cnpjCpf: '12.345.678/0001-90', nome: 'AEROSERVICE TRANSPORTES EXECUTIVOS LTDA' },
+    unidadeGestora: {
+      codigo: '110001',
+      nome: 'PRESIDENCIA DA REPUBLICA',
+      orgaoVinculado: { codigo: '20000', nome: 'PRESIDENCIA DA REPUBLICA' },
+    },
+    valorFinal: 4_800_000,
+    valorInicial: 3_200_000,
+  },
+]
+
+async function getSpendingSummary(): Promise<SpendingSummary> {
+  const CACHE_KEY = 'spending-summary-2025'
+  const CACHE_TTL_SECONDS = 300
+
+  const cached = await getCached<SpendingSummary>(CACHE_KEY)
+  if (cached) return cached
+
+  const apiKey = process.env.TRANSPARENCY_API_KEY
+  if (!apiKey) {
+    await setCache(CACHE_KEY, MOCK_SUMMARY, CACHE_TTL_SECONDS)
+    return MOCK_SUMMARY
+  }
+
+  try {
+    const { fetchSpendingSummary } = await import('@/lib/api/transparency')
+    const summary = await fetchSpendingSummary(2025)
+    await setCache(CACHE_KEY, summary, CACHE_TTL_SECONDS)
+    return summary
+  } catch {
+    await setCache(CACHE_KEY, MOCK_SUMMARY, CACHE_TTL_SECONDS)
+    return MOCK_SUMMARY
+  }
+}
+
+async function getRecentContratos(): Promise<Contrato[]> {
+  const CACHE_KEY = 'contratos-recent'
+  const CACHE_TTL_SECONDS = 300
+
+  const cached = await getCached<Contrato[]>(CACHE_KEY)
+  if (cached) return cached
+
+  const apiKey = process.env.TRANSPARENCY_API_KEY
+  if (!apiKey) {
+    await setCache(CACHE_KEY, MOCK_CONTRATOS, CACHE_TTL_SECONDS)
+    return MOCK_CONTRATOS
+  }
+
+  try {
+    const { fetchContratos } = await import('@/lib/api/transparency')
+    const today = new Date()
+    const dataFinal = today.toISOString().split('T')[0]
+    const pastDate = new Date(today)
+    pastDate.setDate(today.getDate() - 30)
+    const dataInicial = pastDate.toISOString().split('T')[0]
+    const contratos = await fetchContratos(dataInicial, dataFinal, 1)
+    await setCache(CACHE_KEY, contratos, CACHE_TTL_SECONDS)
+    return contratos
+  } catch {
+    await setCache(CACHE_KEY, MOCK_CONTRATOS, CACHE_TTL_SECONDS)
+    return MOCK_CONTRATOS
+  }
+}
+
+export default async function Home() {
+  const [spendingSummary, contratos] = await Promise.all([
+    getSpendingSummary(),
+    getRecentContratos(),
+  ])
+
+  const { totalPago, totalEmpenhado, totalLiquidado } = spendingSummary
   const equivalences = convertToEquivalences(totalPago)
 
-  const topContracts = [...mockContratos]
+  const topContracts = [...contratos]
     .sort((a, b) => b.valorFinal - a.valorFinal)
     .slice(0, 3)
 

@@ -1,5 +1,6 @@
-import { mockSpendingSummary, mockContratos } from '@/lib/mock-data'
-import { humanizeNumber, formatBRL } from '@/lib/utils/format'
+import { getCached, setCache } from '@/lib/api/cache'
+import type { SpendingSummary, Contrato } from '@/lib/api/types'
+import { humanizeNumber } from '@/lib/utils/format'
 import { convertToEquivalences } from '@/lib/utils/equivalences'
 import { PodiumCard } from '@/components/ui/podium-card'
 import { TimelineRow } from '@/components/ui/timeline-row'
@@ -74,14 +75,204 @@ function formatTimeBR(isoDate: string): string {
 
 const TIMELINE_STATUSES = ['pago', 'auditado', 'pendente', 'suspeito'] as const
 
-export default function RankingPage() {
-  const sortedOrgaos = [...mockSpendingSummary.porOrgao]
+const MOCK_SUMMARY: SpendingSummary = {
+  totalPago: 1_892_400_000_000,
+  totalEmpenhado: 2_145_700_000_000,
+  totalLiquidado: 1_998_300_000_000,
+  porOrgao: [
+    {
+      ano: 2025,
+      codigoOrgaoSuperior: '36000',
+      nomeOrgaoSuperior: 'Ministério da Saúde',
+      codigoOrgao: '36101',
+      nomeOrgao: 'MINISTERIO DA SAUDE',
+      valorEmpenhado: 198_500_000_000,
+      valorLiquidado: 182_300_000_000,
+      valorPago: 174_900_000_000,
+      valorRestoInscrito: 15_200_000_000,
+      valorRestoPago: 10_800_000_000,
+    },
+    {
+      ano: 2025,
+      codigoOrgaoSuperior: '26000',
+      nomeOrgaoSuperior: 'Ministério da Educação',
+      codigoOrgao: '26101',
+      nomeOrgao: 'MINISTERIO DA EDUCACAO',
+      valorEmpenhado: 158_200_000_000,
+      valorLiquidado: 142_800_000_000,
+      valorPago: 135_600_000_000,
+      valorRestoInscrito: 12_400_000_000,
+      valorRestoPago: 8_200_000_000,
+    },
+    {
+      ano: 2025,
+      codigoOrgaoSuperior: '52000',
+      nomeOrgaoSuperior: 'Ministério da Defesa',
+      codigoOrgao: '52101',
+      nomeOrgao: 'MINISTERIO DA DEFESA',
+      valorEmpenhado: 125_800_000_000,
+      valorLiquidado: 118_400_000_000,
+      valorPago: 112_300_000_000,
+      valorRestoInscrito: 8_500_000_000,
+      valorRestoPago: 5_400_000_000,
+    },
+    {
+      ano: 2025,
+      codigoOrgaoSuperior: '20000',
+      nomeOrgaoSuperior: 'Presidência da República',
+      codigoOrgao: '20101',
+      nomeOrgao: 'PRESIDENCIA DA REPUBLICA',
+      valorEmpenhado: 185_000_000_000,
+      valorLiquidado: 162_000_000_000,
+      valorPago: 148_300_000_000,
+      valorRestoInscrito: 8_500_000_000,
+      valorRestoPago: 5_200_000_000,
+    },
+  ],
+  atualizadoEm: new Date().toISOString(),
+}
+
+const MOCK_CONTRATOS: Contrato[] = [
+  {
+    id: 88201,
+    dataAssinatura: '2026-03-10',
+    dataFimVigencia: '2026-12-31',
+    dataInicioVigencia: '2026-03-15',
+    dimCompra: {
+      numero: '00012/2026',
+      objeto: 'SERVICOS DE TRANSPORTE AEREO PARA COMITIVA PRESIDENCIAL',
+    },
+    fornecedor: { cnpjCpf: '12.345.678/0001-90', nome: 'AEROSERVICE TRANSPORTES EXECUTIVOS LTDA' },
+    unidadeGestora: {
+      codigo: '110001',
+      nome: 'PRESIDENCIA DA REPUBLICA',
+      orgaoVinculado: { codigo: '20000', nome: 'PRESIDENCIA DA REPUBLICA' },
+    },
+    valorFinal: 4_800_000,
+    valorInicial: 3_200_000,
+  },
+  {
+    id: 88202,
+    dataAssinatura: '2026-03-05',
+    dataFimVigencia: '2027-03-05',
+    dataInicioVigencia: '2026-03-10',
+    dimCompra: {
+      numero: '00045/2026',
+      objeto: 'AQUISICAO DE MOBILIARIO DE ALTO PADRAO PARA GABINETES MINISTERIAIS',
+    },
+    fornecedor: { cnpjCpf: '98.765.432/0001-10', nome: 'MOVEIS LUXO CORPORATIVO S.A.' },
+    unidadeGestora: {
+      codigo: '110002',
+      nome: 'MINISTERIO DA DEFESA',
+      orgaoVinculado: { codigo: '52000', nome: 'MINISTERIO DA DEFESA' },
+    },
+    valorFinal: 2_150_000,
+    valorInicial: 1_400_000,
+  },
+  {
+    id: 88203,
+    dataAssinatura: '2026-03-01',
+    dataFimVigencia: '2026-09-01',
+    dataInicioVigencia: '2026-03-05',
+    dimCompra: {
+      numero: '00078/2026',
+      objeto: 'SERVICO DE BUFFET E ALIMENTACAO PARA EVENTOS OFICIAIS',
+    },
+    fornecedor: { cnpjCpf: '45.678.901/0001-23', nome: 'GOURMET EVENTS CERIMONIAL EIRELI' },
+    unidadeGestora: {
+      codigo: '110003',
+      nome: 'MINISTERIO DAS RELACOES EXTERIORES',
+      orgaoVinculado: { codigo: '35000', nome: 'MINISTERIO DAS RELACOES EXTERIORES' },
+    },
+    valorFinal: 1_890_000,
+    valorInicial: 1_200_000,
+  },
+  {
+    id: 88204,
+    dataAssinatura: '2026-02-20',
+    dataFimVigencia: '2027-02-20',
+    dataInicioVigencia: '2026-03-01',
+    dimCompra: {
+      numero: '00091/2026',
+      objeto: 'LOCACAO DE VEICULOS BLINDADOS COM MOTORISTA PARA SEGURANCA',
+    },
+    fornecedor: { cnpjCpf: '33.444.555/0001-66', nome: 'BLINDACAR SEGURANCA AUTOMOTIVA LTDA' },
+    unidadeGestora: {
+      codigo: '110004',
+      nome: 'GABINETE DE SEGURANCA INSTITUCIONAL',
+      orgaoVinculado: { codigo: '20000', nome: 'PRESIDENCIA DA REPUBLICA' },
+    },
+    valorFinal: 3_400_000,
+    valorInicial: 2_600_000,
+  },
+]
+
+async function getSpendingSummary(): Promise<SpendingSummary> {
+  const CACHE_KEY = 'spending-summary-2025'
+  const CACHE_TTL_SECONDS = 300
+
+  const cached = await getCached<SpendingSummary>(CACHE_KEY)
+  if (cached) return cached
+
+  const apiKey = process.env.TRANSPARENCY_API_KEY
+  if (!apiKey) {
+    await setCache(CACHE_KEY, MOCK_SUMMARY, CACHE_TTL_SECONDS)
+    return MOCK_SUMMARY
+  }
+
+  try {
+    const { fetchSpendingSummary } = await import('@/lib/api/transparency')
+    const summary = await fetchSpendingSummary(2025)
+    await setCache(CACHE_KEY, summary, CACHE_TTL_SECONDS)
+    return summary
+  } catch {
+    await setCache(CACHE_KEY, MOCK_SUMMARY, CACHE_TTL_SECONDS)
+    return MOCK_SUMMARY
+  }
+}
+
+async function getRecentContratos(): Promise<Contrato[]> {
+  const CACHE_KEY = 'contratos-recent'
+  const CACHE_TTL_SECONDS = 300
+
+  const cached = await getCached<Contrato[]>(CACHE_KEY)
+  if (cached) return cached
+
+  const apiKey = process.env.TRANSPARENCY_API_KEY
+  if (!apiKey) {
+    await setCache(CACHE_KEY, MOCK_CONTRATOS, CACHE_TTL_SECONDS)
+    return MOCK_CONTRATOS
+  }
+
+  try {
+    const { fetchContratos } = await import('@/lib/api/transparency')
+    const today = new Date()
+    const dataFinal = today.toISOString().split('T')[0]
+    const pastDate = new Date(today)
+    pastDate.setDate(today.getDate() - 30)
+    const dataInicial = pastDate.toISOString().split('T')[0]
+    const contratos = await fetchContratos(dataInicial, dataFinal, 1)
+    await setCache(CACHE_KEY, contratos, CACHE_TTL_SECONDS)
+    return contratos
+  } catch {
+    await setCache(CACHE_KEY, MOCK_CONTRATOS, CACHE_TTL_SECONDS)
+    return MOCK_CONTRATOS
+  }
+}
+
+export default async function RankingPage() {
+  const [spendingSummary, contratos] = await Promise.all([
+    getSpendingSummary(),
+    getRecentContratos(),
+  ])
+
+  const sortedOrgaos = [...spendingSummary.porOrgao]
     .sort((a, b) => b.valorPago - a.valorPago)
 
   const topThree = sortedOrgaos.slice(0, 3)
   const remainingOrgaos = sortedOrgaos.slice(3, 7)
 
-  const recentContracts = [...mockContratos]
+  const recentContracts = [...contratos]
     .sort((a, b) => b.dataAssinatura.localeCompare(a.dataAssinatura))
     .slice(0, 4)
 
@@ -115,7 +306,7 @@ export default function RankingPage() {
           <span className="w-1 h-1 bg-white/30" />
           <span>DADOS DE 2026</span>
           <span className="w-1 h-1 bg-white/30" />
-          <span>ATUALIZADO EM {formatDateBR(mockSpendingSummary.atualizadoEm)}</span>
+          <span>ATUALIZADO EM {formatDateBR(spendingSummary.atualizadoEm)}</span>
         </div>
       </section>
 
