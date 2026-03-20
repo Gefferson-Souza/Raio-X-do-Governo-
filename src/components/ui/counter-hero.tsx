@@ -24,9 +24,9 @@ export function CounterHero({ value, label, source }: CounterHeroProps) {
   }, [motionValue, value])
 
   return (
-    <div className="bg-emerald-900 p-8 md:p-12 flex flex-col gap-4">
-      <div className="flex items-center gap-3">
-        <motion.span className="font-label text-6xl md:text-9xl font-black tracking-tighter text-yellow-400">
+    <div className="bg-emerald-900 p-6 md:p-12 flex flex-col gap-4 items-center lg:items-start text-center lg:text-left">
+      <div className="flex flex-col lg:flex-row items-center gap-1 lg:gap-3">
+        <motion.span className="font-label text-4xl sm:text-5xl lg:text-9xl font-black tracking-tighter text-yellow-400 break-all lg:break-normal">
           {displayed}
         </motion.span>
       </div>

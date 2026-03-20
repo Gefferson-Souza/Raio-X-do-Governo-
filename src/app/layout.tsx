@@ -53,7 +53,7 @@ export default function RootLayout({
         <TopNav />
         <SideNav />
 
-        <main className="flex-1 pt-20 lg:ml-72 pb-16 md:pb-0">
+        <main className="flex-1 pt-20 lg:ml-72 pb-24 md:pb-0">
           {children}
         </main>
 

@@ -22,7 +22,7 @@ export function ContractCard({
 }: ContractCardProps) {
   return (
     <div
-      className={`relative bg-surface border-t-8 ${borderColor} hard-shadow p-6 flex flex-col gap-4`}
+      className={`relative bg-surface border-l-[12px] border-t-0 md:border-t-8 md:border-l-0 ${borderColor} hard-shadow p-6 flex flex-col gap-4`}
     >
       <Badge variant="auditado" rotated className="top-3 right-3 z-10" />
 
@@ -30,7 +30,8 @@ export function ContractCard({
         <div className="flex items-center justify-center w-10 h-10 bg-surface-container">
           <MaterialIcon icon={icon} size={24} />
         </div>
-        <span className="text-2xl font-black font-headline">{value}</span>
+        <span className="text-2xl font-black font-headline flex-1">{value}</span>
+        <MaterialIcon icon="chevron_right" size={24} className="text-on-surface-variant md:hidden" />
       </div>
 
       <div className="flex flex-col gap-1">

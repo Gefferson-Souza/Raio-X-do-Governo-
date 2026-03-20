@@ -6,6 +6,7 @@ import { KpiEquivalence } from '@/components/ui/kpi-equivalence'
 import { ContractCard } from '@/components/ui/contract-card'
 import { CtaBanner } from '@/components/ui/cta-banner'
 import { StatsBar } from '@/components/ui/stats-bar'
+import { MaterialIcon } from '@/components/icons/material-icon'
 import Link from 'next/link'
 
 const CONTRACT_ICONS: Record<string, string> = {
@@ -79,7 +80,7 @@ export default function Home() {
   return (
     <div className="flex flex-col gap-0">
       {/* HEADER SECTION */}
-      <section className="px-6 lg:px-12 pt-10 pb-6 bg-surface">
+      <section className="px-4 sm:px-6 lg:px-12 pt-10 pb-6 bg-surface">
         <span className="inline-block bg-primary text-on-primary px-4 py-1 font-label text-xs font-bold uppercase tracking-widest mb-4">
           PAINEL DA VERDADE - ONDE O SEU IMPOSTO VAI PARAR
         </span>
@@ -97,7 +98,7 @@ export default function Home() {
       <StatsBar items={[...statsItems]} />
 
       {/* BIG COUNTER SECTION */}
-      <section className="mx-6 lg:mx-12 my-8">
+      <section className="mx-4 lg:mx-12 my-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 border-4 border-emerald-950 bg-white hard-shadow">
           {/* LEFT: Counter Hero */}
           <div className="lg:col-span-8 min-h-[280px]">
@@ -109,30 +110,41 @@ export default function Home() {
           </div>
 
           {/* RIGHT: KPI Equivalences */}
-          <div className="lg:col-span-4 bg-white p-8 flex flex-col justify-center gap-8">
-            <KpiEquivalence
-              icon="school"
-              label="ESCOLAS FNDE"
-              value={equivalences.escolasFNDE.toLocaleString('pt-BR')}
-              description="Escolas que poderiam ser construidas com esse valor"
-              iconBgColor="bg-error"
-              iconTextColor="text-on-error"
-            />
-            <div className="border-t border-outline-variant" />
-            <KpiEquivalence
-              icon="payments"
-              label="SALARIOS MINIMOS"
-              value={equivalences.salariosMinimos.toLocaleString('pt-BR')}
-              description="Equivalente em salarios minimos de R$ 1.518"
-              iconBgColor="bg-secondary-container"
-              iconTextColor="text-on-secondary-container"
-            />
+          <div className="lg:col-span-4 bg-white p-6 lg:p-8 flex flex-row lg:flex-col justify-center gap-4 lg:gap-8">
+            <div className="flex-1 border-l-4 border-error pl-4 lg:border-l-0 lg:pl-0">
+              <KpiEquivalence
+                icon="school"
+                label="ESCOLAS FNDE"
+                value={equivalences.escolasFNDE.toLocaleString('pt-BR')}
+                description="Escolas que poderiam ser construidas com esse valor"
+                iconBgColor="bg-error"
+                iconTextColor="text-on-error"
+              />
+            </div>
+            <div className="hidden lg:block border-t border-outline-variant" />
+            <div className="flex-1 border-l-4 border-secondary pl-4 lg:border-l-0 lg:pl-0">
+              <KpiEquivalence
+                icon="payments"
+                label="SALARIOS MINIMOS"
+                value={equivalences.salariosMinimos.toLocaleString('pt-BR')}
+                description="Equivalente em salarios minimos de R$ 1.518"
+                iconBgColor="bg-secondary-container"
+                iconTextColor="text-on-secondary-container"
+              />
+            </div>
           </div>
         </div>
       </section>
 
+      {/* MOBILE CTA BUTTON */}
+      <div className="px-6 -mt-6 relative z-20 md:hidden">
+        <button className="w-full bg-secondary-container text-on-secondary-container font-headline font-black py-5 text-lg shadow-2xl border-b-4 border-secondary-dim active:translate-y-1 active:border-b-0 uppercase">
+          CALCULAR MEU PREJUÍZO
+        </button>
+      </div>
+
       {/* CONTRACT CARDS SECTION */}
-      <section className="px-6 lg:px-12 py-10 bg-surface-container-low">
+      <section className="px-4 sm:px-6 lg:px-12 py-10 bg-surface-container-low">
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-8">
           <div>
             <span className="inline-block bg-error text-on-error px-3 py-1 font-label text-xs font-bold uppercase tracking-widest mb-3">
@@ -170,7 +182,7 @@ export default function Home() {
       </section>
 
       {/* EQUIVALENCES GRID */}
-      <section className="px-6 lg:px-12 py-10 bg-surface">
+      <section className="px-4 sm:px-6 lg:px-12 py-10 bg-surface">
         <h2 className="font-headline font-black uppercase text-3xl tracking-tighter text-on-surface mb-2">
           O QUE ESSE DINHEIRO COMPRARIA
         </h2>
@@ -204,6 +216,21 @@ export default function Home() {
             bgClass="bg-white"
           />
         </div>
+      </section>
+
+      {/* MOBILE VIRAL HASHTAG SECTION */}
+      <section className="mt-12 bg-on-surface text-white p-8 mx-4 md:mx-0 md:hidden">
+        <MaterialIcon icon="receipt_long" filled className="text-yellow-400 text-4xl mb-4" />
+        <h2 className="font-headline font-black text-3xl uppercase leading-[0.9] tracking-tighter mb-4">
+          Seu imposto está pagando o silêncio.
+        </h2>
+        <p className="font-body text-sm text-surface-variant mb-6 leading-relaxed">
+          Nas últimas 24 horas, o montante gasto poderia ter erradicado a fila de cirurgias eletivas em 12 estados.
+        </p>
+        <div className="h-1 bg-yellow-400 w-16 mb-6" />
+        <p className="font-label text-xs uppercase font-bold tracking-widest text-yellow-400">
+          #OMeuDinheiroSumindo
+        </p>
       </section>
 
       {/* CTA BANNER */}

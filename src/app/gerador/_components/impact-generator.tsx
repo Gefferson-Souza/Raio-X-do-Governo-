@@ -97,7 +97,7 @@ export function ImpactGenerator() {
 
   return (
     <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
-      <div className="xl:col-span-5 bg-surface-container-low p-8 hard-shadow">
+      <div className="xl:col-span-5 bg-surface-container-low p-8 hard-shadow order-last xl:order-first">
         <div className="flex items-center gap-3 mb-8">
           <div className="w-1.5 h-10 bg-primary" />
           <h2 className="text-2xl font-black uppercase font-headline">
@@ -179,7 +179,7 @@ export function ImpactGenerator() {
         </div>
       </div>
 
-      <div className="xl:col-span-7 flex flex-col items-center gap-8">
+      <div className="xl:col-span-7 flex flex-col items-center gap-8 order-first xl:order-last">
         <div className="relative max-w-[600px] w-full aspect-square bg-white hard-shadow flex flex-col overflow-hidden">
           <div className="bg-emerald-800 px-6 py-4 flex items-center justify-between">
             <span className="font-headline font-black text-white text-lg uppercase tracking-wider">
