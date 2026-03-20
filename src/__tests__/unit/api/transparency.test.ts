@@ -13,14 +13,12 @@ function makeDespesa(overrides: Partial<DespesaPorOrgao> = {}): DespesaPorOrgao 
   return {
     ano: 2025,
     codigoOrgaoSuperior: '26000',
-    nomeOrgaoSuperior: 'Ministério da Educação',
+    orgaoSuperior: 'Ministério da Educação',
     codigoOrgao: '26101',
-    nomeOrgao: 'Secretaria Executiva',
-    valorEmpenhado: 1_000_000,
-    valorLiquidado: 900_000,
-    valorPago: 800_000,
-    valorRestoInscrito: 50_000,
-    valorRestoPago: 40_000,
+    orgao: 'Secretaria Executiva',
+    empenhado: 1_000_000,
+    liquidado: 900_000,
+    pago: 800_000,
     ...overrides,
   }
 }
@@ -46,7 +44,7 @@ describe('transparency API client', () => {
         new Response(JSON.stringify(mockData), { status: 200 }),
       )
 
-      const result = await fetchDespesasPorOrgao(2025, 1)
+      const result = await fetchDespesasPorOrgao(2025, '26000', 1)
 
       expect(result).toEqual(mockData)
       expect(fetchSpy).toHaveBeenCalledTimes(1)
@@ -65,7 +63,7 @@ describe('transparency API client', () => {
         new Response(JSON.stringify([]), { status: 200 }),
       )
 
-      await fetchDespesasPorOrgao(2025)
+      await fetchDespesasPorOrgao(2025, '26000')
 
       const [url] = fetchSpy.mock.calls[0]
       expect(url).toContain('pagina=1')
@@ -78,7 +76,7 @@ describe('transparency API client', () => {
         new Response(JSON.stringify([]), { status: 200 }),
       )
 
-      await fetchContratos('01/01/2025', '30/06/2025', 2)
+      await fetchContratos('01/01/2025', '30/06/2025', '26101', 2)
 
       const [url] = fetchSpy.mock.calls[0]
       expect(url).toContain('dataInicial=01%2F01%2F2025')
@@ -105,7 +103,7 @@ describe('transparency API client', () => {
     it('throws when TRANSPARENCY_API_KEY is not set', async () => {
       delete process.env.TRANSPARENCY_API_KEY
 
-      await expect(fetchDespesasPorOrgao(2025)).rejects.toThrow(
+      await expect(fetchDespesasPorOrgao(2025, '26000')).rejects.toThrow(
         'TRANSPARENCY_API_KEY environment variable is not set',
       )
     })
@@ -118,7 +116,7 @@ describe('transparency API client', () => {
         .mockResolvedValueOnce(new Response('', { status: 500, statusText: 'Server Error' }))
         .mockResolvedValueOnce(new Response(JSON.stringify(mockData), { status: 200 }))
 
-      const result = await fetchDespesasPorOrgao(2025)
+      const result = await fetchDespesasPorOrgao(2025, '26000')
 
       expect(result).toEqual(mockData)
       expect(fetchSpy).toHaveBeenCalledTimes(2)
@@ -130,7 +128,7 @@ describe('transparency API client', () => {
         .mockResolvedValueOnce(new Response('', { status: 429, statusText: 'Too Many Requests' }))
         .mockResolvedValueOnce(new Response(JSON.stringify(mockData), { status: 200 }))
 
-      const result = await fetchDespesasPorOrgao(2025)
+      const result = await fetchDespesasPorOrgao(2025, '26000')
 
       expect(result).toEqual(mockData)
       expect(fetchSpy).toHaveBeenCalledTimes(2)
@@ -142,7 +140,7 @@ describe('transparency API client', () => {
         .mockResolvedValueOnce(new Response('', { status: 500, statusText: 'Server Error' }))
         .mockResolvedValueOnce(new Response('', { status: 500, statusText: 'Server Error' }))
 
-      await expect(fetchDespesasPorOrgao(2025)).rejects.toThrow(
+      await expect(fetchDespesasPorOrgao(2025, '26000')).rejects.toThrow(
         'Request failed after 3 retries',
       )
     })
@@ -152,24 +150,25 @@ describe('transparency API client', () => {
         new Response('', { status: 403, statusText: 'Forbidden' }),
       )
 
-      await expect(fetchDespesasPorOrgao(2025)).rejects.toThrow('HTTP 403: Forbidden')
+      await expect(fetchDespesasPorOrgao(2025, '26000')).rejects.toThrow('HTTP 403: Forbidden')
     })
   })
 
   describe('fetchSpendingSummary', () => {
     it('aggregates multiple pages into summary', async () => {
       const page1 = [
-        makeDespesa({ valorPago: 100, valorEmpenhado: 200, valorLiquidado: 150 }),
-        makeDespesa({ valorPago: 300, valorEmpenhado: 400, valorLiquidado: 350 }),
+        makeDespesa({ pago: 100, empenhado: 200, liquidado: 150 }),
+        makeDespesa({ pago: 300, empenhado: 400, liquidado: 350 }),
       ]
       const page2 = [
-        makeDespesa({ valorPago: 50, valorEmpenhado: 80, valorLiquidado: 60 }),
+        makeDespesa({ pago: 50, empenhado: 80, liquidado: 60 }),
       ]
 
       vi.spyOn(globalThis, 'fetch')
         .mockResolvedValueOnce(new Response(JSON.stringify(page1), { status: 200 }))
         .mockResolvedValueOnce(new Response(JSON.stringify(page2), { status: 200 }))
         .mockResolvedValueOnce(new Response(JSON.stringify([]), { status: 200 }))
+        .mockResolvedValue(new Response(JSON.stringify([]), { status: 200 }))
 
       const summary = await fetchSpendingSummary(2025)
 
@@ -182,7 +181,7 @@ describe('transparency API client', () => {
     })
 
     it('returns zeros when no data is available', async () => {
-      vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+      vi.spyOn(globalThis, 'fetch').mockResolvedValue(
         new Response(JSON.stringify([]), { status: 200 }),
       )
 

@@ -89,7 +89,7 @@ export default async function RankingPage() {
   const contratos = contractsResult.data
 
   const sortedOrgaos = [...spendingSummary.porOrgao]
-    .sort((a, b) => b.valorPago - a.valorPago)
+    .sort((a, b) => b.pago - a.pago)
 
   const topThree = sortedOrgaos.slice(0, 3)
   const remainingOrgaos = sortedOrgaos.slice(3, 7)
@@ -164,11 +164,11 @@ export default async function RankingPage() {
             {topThree[1] && (
               <PodiumCard
                 position={2}
-                orgao={topThree[1].nomeOrgao}
-                category={pickOrgaoCategory(topThree[1].nomeOrgao)}
-                value={humanizeNumber(topThree[1].valorPago)}
-                equivalence={`${convertToEquivalences(topThree[1].valorPago).salariosMinimos.toLocaleString('pt-BR')} salarios minimos`}
-                icon={pickOrgaoIcon(topThree[1].nomeOrgao)}
+                orgao={topThree[1].orgao}
+                category={pickOrgaoCategory(topThree[1].orgao)}
+                value={humanizeNumber(topThree[1].pago)}
+                equivalence={`${convertToEquivalences(topThree[1].pago).salariosMinimos.toLocaleString('pt-BR')} salarios minimos`}
+                icon={pickOrgaoIcon(topThree[1].orgao)}
               />
             )}
 
@@ -176,11 +176,11 @@ export default async function RankingPage() {
             {topThree[0] && (
               <PodiumCard
                 position={1}
-                orgao={topThree[0].nomeOrgao}
-                category={pickOrgaoCategory(topThree[0].nomeOrgao)}
-                value={humanizeNumber(topThree[0].valorPago)}
-                equivalence={`${convertToEquivalences(topThree[0].valorPago).salariosMinimos.toLocaleString('pt-BR')} salarios minimos`}
-                icon={pickOrgaoIcon(topThree[0].nomeOrgao)}
+                orgao={topThree[0].orgao}
+                category={pickOrgaoCategory(topThree[0].orgao)}
+                value={humanizeNumber(topThree[0].pago)}
+                equivalence={`${convertToEquivalences(topThree[0].pago).salariosMinimos.toLocaleString('pt-BR')} salarios minimos`}
+                icon={pickOrgaoIcon(topThree[0].orgao)}
               />
             )}
 
@@ -188,11 +188,11 @@ export default async function RankingPage() {
             {topThree[2] && (
               <PodiumCard
                 position={3}
-                orgao={topThree[2].nomeOrgao}
-                category={pickOrgaoCategory(topThree[2].nomeOrgao)}
-                value={humanizeNumber(topThree[2].valorPago)}
-                equivalence={`${convertToEquivalences(topThree[2].valorPago).salariosMinimos.toLocaleString('pt-BR')} salarios minimos`}
-                icon={pickOrgaoIcon(topThree[2].nomeOrgao)}
+                orgao={topThree[2].orgao}
+                category={pickOrgaoCategory(topThree[2].orgao)}
+                value={humanizeNumber(topThree[2].pago)}
+                equivalence={`${convertToEquivalences(topThree[2].pago).salariosMinimos.toLocaleString('pt-BR')} salarios minimos`}
+                icon={pickOrgaoIcon(topThree[2].orgao)}
               />
             )}
           </div>
@@ -230,19 +230,19 @@ export default async function RankingPage() {
                   ALERTA DE DESVIO
                 </span>
                 <h4 className="font-headline font-black uppercase text-2xl tracking-tighter text-on-surface">
-                  {remainingOrgaos[0].nomeOrgao}
+                  {remainingOrgaos[0].orgao}
                 </h4>
                 <p className="font-body text-sm text-on-surface-variant italic">
-                  Gasto de {humanizeNumber(remainingOrgaos[0].valorPago)} com apenas{' '}
-                  {computePercentual(remainingOrgaos[0].valorPago, remainingOrgaos[0].valorEmpenhado)}% de execucao
+                  Gasto de {humanizeNumber(remainingOrgaos[0].pago)} com apenas{' '}
+                  {computePercentual(remainingOrgaos[0].pago, remainingOrgaos[0].empenhado)}% de execucao
                   orcamentaria. Valores que precisam de explicacao.
                 </p>
                 <div className="mt-auto pt-4 border-t border-outline-variant flex items-center justify-between">
                   <span className="text-3xl font-black font-headline tracking-tighter text-error">
-                    {humanizeNumber(remainingOrgaos[0].valorPago)}
+                    {humanizeNumber(remainingOrgaos[0].pago)}
                   </span>
                   <span className="text-xs font-bold uppercase font-label text-on-surface-variant">
-                    EMPENHADO: {humanizeNumber(remainingOrgaos[0].valorEmpenhado)}
+                    EMPENHADO: {humanizeNumber(remainingOrgaos[0].empenhado)}
                   </span>
                 </div>
               </div>
@@ -258,14 +258,14 @@ export default async function RankingPage() {
                   #{index + 5}o LUGAR
                 </span>
                 <h4 className="font-headline font-black uppercase text-base tracking-tight text-on-surface">
-                  {orgao.nomeOrgao}
+                  {orgao.orgao}
                 </h4>
                 <span className="text-2xl font-black font-headline tracking-tighter text-on-surface">
-                  {humanizeNumber(orgao.valorPago)}
+                  {humanizeNumber(orgao.pago)}
                 </span>
                 <div className="mt-auto pt-3 border-t border-outline-variant">
                   <span className="text-xs font-bold uppercase font-label text-on-surface-variant">
-                    EXECUCAO: {computePercentual(orgao.valorPago, orgao.valorEmpenhado)}%
+                    EXECUCAO: {computePercentual(orgao.pago, orgao.empenhado)}%
                   </span>
                 </div>
               </div>

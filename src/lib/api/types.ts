@@ -1,14 +1,23 @@
+export interface DespesaPorOrgaoRaw {
+  ano: number
+  orgao: string
+  codigoOrgao: string
+  orgaoSuperior: string
+  codigoOrgaoSuperior: string
+  empenhado: string
+  liquidado: string
+  pago: string
+}
+
 export interface DespesaPorOrgao {
   ano: number
-  codigoOrgaoSuperior: string
-  nomeOrgaoSuperior: string
+  orgao: string
   codigoOrgao: string
-  nomeOrgao: string
-  valorEmpenhado: number
-  valorLiquidado: number
-  valorPago: number
-  valorRestoInscrito: number
-  valorRestoPago: number
+  orgaoSuperior: string
+  codigoOrgaoSuperior: string
+  empenhado: number
+  liquidado: number
+  pago: number
 }
 
 export interface Contrato {

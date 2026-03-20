@@ -12,17 +12,15 @@ describe('API types', () => {
       const despesa: DespesaPorOrgao = {
         ano: 2025,
         codigoOrgaoSuperior: '26000',
-        nomeOrgaoSuperior: 'Ministério da Educação',
+        orgaoSuperior: 'Ministério da Educação',
         codigoOrgao: '26101',
-        nomeOrgao: 'Secretaria Executiva',
-        valorEmpenhado: 1_000_000,
-        valorLiquidado: 900_000,
-        valorPago: 800_000,
-        valorRestoInscrito: 50_000,
-        valorRestoPago: 40_000,
+        orgao: 'Secretaria Executiva',
+        empenhado: 1_000_000,
+        liquidado: 900_000,
+        pago: 800_000,
       }
       expect(despesa.ano).toBe(2025)
-      expect(despesa.valorPago).toBe(800_000)
+      expect(despesa.pago).toBe(800_000)
     })
   })
 
