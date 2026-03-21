@@ -1,36 +1,89 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Raio-X do Governo
 
-## Getting Started
+Dashboard de transparencia que mostra em tempo real como o governo federal brasileiro gasta o dinheiro publico. Transforma dados brutos do Portal da Transparencia em informacoes acessiveis, com equivalencias do tipo "isso equivale a X escolas" para facilitar a compreensao.
 
-First, run the development server:
+## Funcionalidades
+
+- **Dashboard de gastos** — Total pago, empenhado e liquidado por orgao, atualizado a cada 5 minutos
+- **Ranking de ministerios** — Podio dos maiores gastadores com barra de execucao orcamentaria
+- **Contratos recentes** — Top contratos agrupados por fornecedor
+- **Politicos** — Deputados e senadores com despesas detalhadas, filtro por partido e estado
+- **Gerador de impacto** — Cria cards compartilhaveis que convertem valores em equivalencias (escolas, salarios, cestas basicas)
+- **Compartilhamento** — WhatsApp, LinkedIn, Twitter e download de imagem com OG preview
+
+## Stack
+
+- **Next.js 16** (App Router, SSR + ISR)
+- **React 19** + **React Query 5** (client-side polling)
+- **Tailwind CSS 4**
+- **Framer Motion** (animacoes)
+- **Upstash Redis** (cache distribuido, opcional)
+- **Vitest** (testes unitarios)
+
+## Fontes de dados
+
+| API | Dados |
+|-----|-------|
+| Portal da Transparencia | Despesas por orgao, contratos |
+| Camara dos Deputados | Deputados e suas despesas |
+| Senado (Codante) | Senadores, despesas e partidos |
+
+## Setup
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# Instalar dependencias
+npm install
+
+# Configurar variaveis de ambiente
+cp .env.example .env
+# Editar .env com sua chave de API
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Variaveis de ambiente
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| Variavel | Obrigatorio | Descricao |
+|----------|-------------|-----------|
+| `TRANSPARENCY_API_KEY` | Sim | Chave da API do Portal da Transparencia |
+| `UPSTASH_REDIS_REST_URL` | Nao | URL do Redis (fallback: cache em memoria) |
+| `UPSTASH_REDIS_REST_TOKEN` | Nao | Token do Redis |
+| `CRON_SECRET` | Nao | Verificacao do endpoint de cron |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Desenvolvimento
 
-## Learn More
+```bash
+npm run dev          # Servidor de desenvolvimento
+npm run build        # Build de producao
+npm run test         # Testes em modo watch
+npm run test:run     # Testes (execucao unica)
+npm run test:coverage # Cobertura de testes
+npm run lint         # ESLint
+```
 
-To learn more about Next.js, take a look at the following resources:
+### SonarQube (opcional)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+npm run sonar:up     # Sobe container SonarQube
+npm run sonar:check  # Roda testes + scan
+npm run sonar:down   # Para container
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Arquitetura
 
-## Deploy on Vercel
+```
+src/
+├── app/                    Pages e API routes (Next.js App Router)
+│   ├── api/                Endpoints: spending, politicians, cron, og
+│   ├── ranking/            Ranking de ministerios
+│   ├── carrinho/           Contratos agrupados
+│   ├── gerador/            Gerador de cards de impacto
+│   └── politicos/          Deputados, senadores, partidos, congresso
+├── components/
+│   ├── layout/             TopNav, SideNav, BottomNav, Footer
+│   └── ui/                 SpendingPoller, PoliticiansContent, CounterHero, etc.
+└── lib/
+    ├── api/                Clients: transparency, camara, senado, tse, cache
+    ├── services/           Cache-aside wrappers (spending, contracts, politicians)
+    └── utils/              Formatacao, equivalencias, compartilhamento, constantes
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Documentacao tecnica detalhada em `docs/CODEMAPS/`.

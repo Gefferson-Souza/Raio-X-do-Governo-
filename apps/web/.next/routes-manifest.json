@@ -1,0 +1,138 @@
+{
+  "version": 3,
+  "pages404": true,
+  "appType": "app",
+  "caseSensitive": false,
+  "basePath": "",
+  "redirects": [
+    {
+      "source": "/:path+/",
+      "destination": "/:path+",
+      "internal": true,
+      "priority": true,
+      "statusCode": 308,
+      "regex": "^(?:/((?:[^/]+?)(?:/(?:[^/]+?))*))/$"
+    }
+  ],
+  "headers": [],
+  "onMatchHeaders": [],
+  "rewrites": {
+    "beforeFiles": [],
+    "afterFiles": [],
+    "fallback": []
+  },
+  "dynamicRoutes": [
+    {
+      "page": "/politicos/deputados/[id]",
+      "regex": "^/politicos/deputados/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/politicos/deputados/(?<nxtPid>[^/]+?)(?:/)?$"
+    }
+  ],
+  "staticRoutes": [
+    {
+      "page": "/",
+      "regex": "^/(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/(?:/)?$"
+    },
+    {
+      "page": "/_global-error",
+      "regex": "^/_global\\-error(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/_global\\-error(?:/)?$"
+    },
+    {
+      "page": "/_not-found",
+      "regex": "^/_not\\-found(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/_not\\-found(?:/)?$"
+    },
+    {
+      "page": "/api/cron/politicians",
+      "regex": "^/api/cron/politicians(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/cron/politicians(?:/)?$"
+    },
+    {
+      "page": "/api/og",
+      "regex": "^/api/og(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/og(?:/)?$"
+    },
+    {
+      "page": "/api/politicians",
+      "regex": "^/api/politicians(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/politicians(?:/)?$"
+    },
+    {
+      "page": "/api/spending",
+      "regex": "^/api/spending(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/spending(?:/)?$"
+    },
+    {
+      "page": "/carrinho",
+      "regex": "^/carrinho(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/carrinho(?:/)?$"
+    },
+    {
+      "page": "/favicon.ico",
+      "regex": "^/favicon\\.ico(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/favicon\\.ico(?:/)?$"
+    },
+    {
+      "page": "/gerador",
+      "regex": "^/gerador(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/gerador(?:/)?$"
+    },
+    {
+      "page": "/politicos",
+      "regex": "^/politicos(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/politicos(?:/)?$"
+    },
+    {
+      "page": "/politicos/congresso",
+      "regex": "^/politicos/congresso(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/politicos/congresso(?:/)?$"
+    },
+    {
+      "page": "/politicos/partidos",
+      "regex": "^/politicos/partidos(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/politicos/partidos(?:/)?$"
+    },
+    {
+      "page": "/ranking",
+      "regex": "^/ranking(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/ranking(?:/)?$"
+    }
+  ],
+  "dataRoutes": [],
+  "rsc": {
+    "header": "rsc",
+    "varyHeader": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+    "prefetchHeader": "next-router-prefetch",
+    "didPostponeHeader": "x-nextjs-postponed",
+    "contentTypeHeader": "text/x-component",
+    "suffix": ".rsc",
+    "prefetchSegmentHeader": "next-router-segment-prefetch",
+    "prefetchSegmentSuffix": ".segment.rsc",
+    "prefetchSegmentDirSuffix": ".segments",
+    "clientParamParsing": false,
+    "dynamicRSCPrerender": false
+  },
+  "rewriteHeaders": {
+    "pathHeader": "x-nextjs-rewritten-path",
+    "queryHeader": "x-nextjs-rewritten-query"
+  }
+}

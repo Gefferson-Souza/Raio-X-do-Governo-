@@ -1,0 +1,17 @@
+{
+  "/_global-error/page": "/_global-error",
+  "/_not-found/page": "/_not-found",
+  "/api/cron/politicians/route": "/api/cron/politicians",
+  "/api/og/route": "/api/og",
+  "/api/politicians/route": "/api/politicians",
+  "/api/spending/route": "/api/spending",
+  "/carrinho/page": "/carrinho",
+  "/favicon.ico/route": "/favicon.ico",
+  "/gerador/page": "/gerador",
+  "/page": "/",
+  "/politicos/congresso/page": "/politicos/congresso",
+  "/politicos/deputados/[id]/page": "/politicos/deputados/[id]",
+  "/politicos/page": "/politicos",
+  "/politicos/partidos/page": "/politicos/partidos",
+  "/ranking/page": "/ranking"
+}

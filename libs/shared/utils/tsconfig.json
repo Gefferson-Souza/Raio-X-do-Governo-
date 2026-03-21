@@ -1,0 +1,10 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "../../../dist/libs/shared/utils",
+    "paths": {
+      "@raio-x/types": ["../../../libs/shared/types/src/index.ts"]
+    }
+  },
+  "include": ["src/**/*.ts"]
+}

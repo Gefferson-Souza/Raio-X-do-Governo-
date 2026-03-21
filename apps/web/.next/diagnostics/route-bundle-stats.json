@@ -1,0 +1,125 @@
+[
+  {
+    "route": "/politicos",
+    "firstLoadUncompressedJsBytes": 582292,
+    "firstLoadChunkPaths": [
+      ".next/static/chunks/09usb18276f5f.js",
+      ".next/static/chunks/0d3shmwh5_nmn.js",
+      ".next/static/chunks/02lw5bscmykj6.js",
+      ".next/static/chunks/02ty9.5yo_fen.js",
+      ".next/static/chunks/0pqt~8bl3ukh4.js",
+      ".next/static/chunks/0ieu2e0e38fjn.js",
+      ".next/static/chunks/00ilazh50sdzh.js",
+      ".next/static/chunks/turbopack-0jatrtvc6aso..js"
+    ]
+  },
+  {
+    "route": "/",
+    "firstLoadUncompressedJsBytes": 576329,
+    "firstLoadChunkPaths": [
+      ".next/static/chunks/09usb18276f5f.js",
+      ".next/static/chunks/0d3shmwh5_nmn.js",
+      ".next/static/chunks/0f8_9s2ou8zno.js",
+      ".next/static/chunks/02ty9.5yo_fen.js",
+      ".next/static/chunks/0pqt~8bl3ukh4.js",
+      ".next/static/chunks/0ieu2e0e38fjn.js",
+      ".next/static/chunks/00ilazh50sdzh.js",
+      ".next/static/chunks/turbopack-0jatrtvc6aso..js"
+    ]
+  },
+  {
+    "route": "/politicos/partidos",
+    "firstLoadUncompressedJsBytes": 572069,
+    "firstLoadChunkPaths": [
+      ".next/static/chunks/09usb18276f5f.js",
+      ".next/static/chunks/0d3shmwh5_nmn.js",
+      ".next/static/chunks/0blr671.pwa~w.js",
+      ".next/static/chunks/02ty9.5yo_fen.js",
+      ".next/static/chunks/0pqt~8bl3ukh4.js",
+      ".next/static/chunks/0ieu2e0e38fjn.js",
+      ".next/static/chunks/00ilazh50sdzh.js",
+      ".next/static/chunks/turbopack-0jatrtvc6aso..js"
+    ]
+  },
+  {
+    "route": "/politicos/congresso",
+    "firstLoadUncompressedJsBytes": 571417,
+    "firstLoadChunkPaths": [
+      ".next/static/chunks/09usb18276f5f.js",
+      ".next/static/chunks/0d3shmwh5_nmn.js",
+      ".next/static/chunks/15t9yq8v~9bb1.js",
+      ".next/static/chunks/02ty9.5yo_fen.js",
+      ".next/static/chunks/0pqt~8bl3ukh4.js",
+      ".next/static/chunks/0ieu2e0e38fjn.js",
+      ".next/static/chunks/00ilazh50sdzh.js",
+      ".next/static/chunks/turbopack-0jatrtvc6aso..js"
+    ]
+  },
+  {
+    "route": "/politicos/deputados/[id]",
+    "firstLoadUncompressedJsBytes": 571029,
+    "firstLoadChunkPaths": [
+      ".next/static/chunks/09usb18276f5f.js",
+      ".next/static/chunks/0d3shmwh5_nmn.js",
+      ".next/static/chunks/07_zj.1~1p18i.js",
+      ".next/static/chunks/02ty9.5yo_fen.js",
+      ".next/static/chunks/0pqt~8bl3ukh4.js",
+      ".next/static/chunks/0ieu2e0e38fjn.js",
+      ".next/static/chunks/00ilazh50sdzh.js",
+      ".next/static/chunks/turbopack-0jatrtvc6aso..js"
+    ]
+  },
+  {
+    "route": "/gerador",
+    "firstLoadUncompressedJsBytes": 563948,
+    "firstLoadChunkPaths": [
+      ".next/static/chunks/09usb18276f5f.js",
+      ".next/static/chunks/0d3shmwh5_nmn.js",
+      ".next/static/chunks/0yb-7c8d0vkyd.js",
+      ".next/static/chunks/02ty9.5yo_fen.js",
+      ".next/static/chunks/0pqt~8bl3ukh4.js",
+      ".next/static/chunks/0ieu2e0e38fjn.js",
+      ".next/static/chunks/00ilazh50sdzh.js",
+      ".next/static/chunks/turbopack-0jatrtvc6aso..js"
+    ]
+  },
+  {
+    "route": "/_not-found",
+    "firstLoadUncompressedJsBytes": 551307,
+    "firstLoadChunkPaths": [
+      ".next/static/chunks/09usb18276f5f.js",
+      ".next/static/chunks/0d3shmwh5_nmn.js",
+      ".next/static/chunks/02ty9.5yo_fen.js",
+      ".next/static/chunks/0pqt~8bl3ukh4.js",
+      ".next/static/chunks/0ieu2e0e38fjn.js",
+      ".next/static/chunks/00ilazh50sdzh.js",
+      ".next/static/chunks/turbopack-0jatrtvc6aso..js"
+    ]
+  },
+  {
+    "route": "/carrinho",
+    "firstLoadUncompressedJsBytes": 551307,
+    "firstLoadChunkPaths": [
+      ".next/static/chunks/09usb18276f5f.js",
+      ".next/static/chunks/0d3shmwh5_nmn.js",
+      ".next/static/chunks/02ty9.5yo_fen.js",
+      ".next/static/chunks/0pqt~8bl3ukh4.js",
+      ".next/static/chunks/0ieu2e0e38fjn.js",
+      ".next/static/chunks/00ilazh50sdzh.js",
+      ".next/static/chunks/turbopack-0jatrtvc6aso..js"
+    ]
+  },
+  {
+    "route": "/ranking",
+    "firstLoadUncompressedJsBytes": 551307,
+    "firstLoadChunkPaths": [
+      ".next/static/chunks/09usb18276f5f.js",
+      ".next/static/chunks/0d3shmwh5_nmn.js",
+      ".next/static/chunks/02ty9.5yo_fen.js",
+      ".next/static/chunks/0pqt~8bl3ukh4.js",
+      ".next/static/chunks/0ieu2e0e38fjn.js",
+      ".next/static/chunks/00ilazh50sdzh.js",
+      ".next/static/chunks/turbopack-0jatrtvc6aso..js"
+    ]
+  }
+]

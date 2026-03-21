@@ -1,11 +1,10 @@
-<!-- Generated: 2026-03-20 | Files scanned: 42 | Token estimate: ~600 -->
+<!-- Generated: 2026-03-20 | Files scanned: 56 | Token estimate: ~800 -->
 
 # Data
 
 ## No Database
 
-This project has no persistent database. All data is sourced from the Portal da Transparência API
-and cached ephemerally (Redis or in-memory).
+All data sourced from external government APIs and cached ephemerally (Redis or in-memory).
 
 ## Core Types (src/lib/api/types.ts)
 
@@ -41,12 +40,48 @@ Contrato {
 }
 ```
 
+## Politician Types (src/lib/api/camara-types.ts)
+
+```
+PoliticiansData {
+  deputados: DeputadoResumo[]
+  senadores: SenadorResumo[]
+  partidos: PartidoResumo[]
+  atualizadoEm: string       ISO timestamp
+  fonte: 'live' | 'cached' | 'error'
+}
+
+DeputadoResumo {
+  id, nome, siglaPartido, siglaUf: string
+  urlFoto: string
+  email: string
+  despesaTotal: number
+  despesasPorTipo: { tipoDespesa: string, valorTotal: number }[]
+}
+
+SenadorResumo {
+  codigo, nome, siglaPartido, siglaUf: string
+  urlFoto: string
+  despesaTotal: number
+}
+
+PartidoResumo {
+  sigla: string
+  nome: string
+  totalDeputados: number
+  totalSenadores: number
+  despesaTotal: number
+}
+```
+
 ## Cache Keys
 
 | Key Pattern | TTL | Content |
 |-------------|-----|---------|
 | `spending-{year}` | 300s | SpendingSummary |
 | `contracts-recent-{days}` | 600s | Contrato[] |
+| `politicians-data` | 3600s | PoliticiansData |
+| `politicians-data` (cron) | 86400s | PoliticiansData (24h for pre-fetch) |
 
 ## Reference Constants (src/lib/utils/constants.ts)
 
@@ -69,20 +104,21 @@ REFERENCES = {
 ## Data Flow Summary
 
 ```
-Portal da Transparência API
-  │
-  ▼
-transparency.ts (parse BR numbers, retry, rate limit)
-  │
-  ▼
-cache.ts (Redis/in-memory, keyed by year/days)
-  │
-  ▼
-services (spending-service, contracts-service)
-  │
-  ▼
-Server Components (page.tsx) → SSR HTML
-  │
-  ▼
-Client Components (SpendingPoller → /api/spending → same service chain)
+External APIs
+  ├── Portal da Transparência → transparency.ts (retry 3x, 300ms delay, 15s timeout)
+  ├── Câmara dos Deputados    → camara.ts (paginated, bulk expense fetch)
+  ├── Senado (Codante)        → senado.ts (bulk expenses + party summary)
+  └── TSE                     → tse.ts (reserved, not actively used)
+        │
+        ▼
+  cache.ts (Redis/in-memory, keyed by year/days/type)
+        │
+        ▼
+  Services (spending-service, contracts-service, politicians-service)
+        │
+        ▼
+  Server Components (page.tsx files) → SSR HTML
+        │
+        ▼
+  Client Components (SpendingPoller, PoliticiansContent → poll API routes)
 ```

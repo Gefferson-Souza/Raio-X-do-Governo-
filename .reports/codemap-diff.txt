@@ -1,38 +1,71 @@
-Codemap Analysis Report — 2026-03-20
-======================================
+Codemap Update Report — 2026-03-20
+====================================
 
-Status: INITIAL GENERATION (no previous codemaps existed)
+Previous scan: 42 files | Current scan: 56 files (+14 new)
 
-Files Scanned: 42 source files (3,967 total lines)
-Codemaps Generated: 5
-  - docs/CODEMAPS/architecture.md  (~700 tokens)
-  - docs/CODEMAPS/frontend.md      (~900 tokens)
-  - docs/CODEMAPS/backend.md       (~600 tokens)
-  - docs/CODEMAPS/dependencies.md  (~500 tokens)
-  - docs/CODEMAPS/data.md          (~600 tokens)
+## Major Changes
 
-Architecture Summary:
-  - Project type: Single Next.js 16 app (SSR + ISR + Edge)
-  - Pages: 4 routes (/, /ranking, /carrinho, /gerador)
-  - API routes: 2 (GET /api/spending, GET /api/og)
-  - Components: 16 (4 layout, 11 UI, 1 icon)
-  - Services: 2 (spending, contracts)
-  - External APIs: 1 (Portal da Transparência)
-  - Cache: 2-tier (Upstash Redis + in-memory)
-  - No database
+### New Feature: Politicians (Politicos)
+The entire politicians feature was missing from previous codemaps.
 
-Dependencies Detected:
-  - next 16.2.0, react 19.2.4
-  - @tanstack/react-query ^5.91.2
-  - framer-motion ^12.38.0
-  - @upstash/redis ^1.37.0
-  - nuqs ^2.8.9 (installed but not actively used)
-  - recharts ^3.8.0 (installed but not actively used)
+Added to architecture.md:
+  + Politicians data flow (Camara + Senado APIs -> cache -> SSR -> client)
+  + Cron job architecture (daily 6am pre-fetch)
+  + 4 external API sources (was 1)
 
-Staleness Warnings:
-  - None (first generation)
+Added to backend.md:
+  + GET /api/politicians route (132 lines)
+  + GET /api/cron/politicians route (359 lines)
+  + politicians-service.ts service chain
+  + camara.ts API client (84 lines)
+  + senado.ts API client (103 lines)
+  + camara-types.ts type definitions (114 lines)
 
-Notes:
-  - nuqs and recharts are declared as dependencies but have no active usage in pages/components
-  - SonarQube infrastructure added (docker-compose.sonar.yml)
-  - Test coverage at 18.2% (target: 80%)
+Added to frontend.md:
+  + /politicos page (28 lines)
+  + /politicos/deputados/[id] page (172 lines)
+  + /politicos/congresso page (159 lines)
+  + /politicos/partidos page (177 lines)
+  + PoliticiansContent component (429 lines - largest component)
+  + Badge, LastUpdated components
+
+Added to data.md:
+  + PoliticiansData, DeputadoResumo, SenadorResumo, PartidoResumo types
+  + politicians-data cache key (TTL 3600s / 86400s for cron)
+
+Added to dependencies.md:
+  + Camara dos Deputados API (dadosabertos.camara.leg.br)
+  + Senate/Codante API (apis.codante.io)
+  + TSE API (reserved, divulgacandcontas.tse.jus.br)
+  + CRON_SECRET env var
+
+## Files Added Since Last Scan (+14)
+  src/app/politicos/page.tsx
+  src/app/politicos/deputados/[id]/page.tsx
+  src/app/politicos/congresso/page.tsx
+  src/app/politicos/partidos/page.tsx
+  src/app/api/politicians/route.ts
+  src/app/api/cron/politicians/route.ts
+  src/lib/api/camara.ts
+  src/lib/api/senado.ts
+  src/lib/api/tse.ts
+  src/lib/api/camara-types.ts
+  src/lib/services/politicians-service.ts
+  src/components/ui/politicians-content.tsx
+  src/components/ui/badge.tsx
+  src/components/ui/last-updated.tsx
+
+## Files Modified
+  src/lib/api/types.ts (81 -> 138 lines, politician types added)
+  src/app/api/og/route.tsx (196 -> 213 lines, LinkedIn sharing)
+  src/lib/utils/share.ts (added LinkedIn sharing)
+
+## Staleness Warnings
+  None - all codemaps freshly updated.
+
+## Diff Percentage
+  architecture.md: ~45% new content
+  backend.md:      ~55% new content
+  frontend.md:     ~40% new content
+  data.md:         ~50% new content
+  dependencies.md: ~35% new content

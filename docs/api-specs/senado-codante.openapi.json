@@ -1,0 +1,157 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Codante Senator Expenses API",
+    "version": "1.0.0",
+    "description": "Third-party API aggregating Brazilian Senate expense data. Maintained by Codante.io. NOT the official Senate API. Manually documented based on actual usage in the project (2026-03-20).",
+    "contact": {
+      "name": "Codante",
+      "url": "https://codante.io"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://apis.codante.io/senator-expenses",
+      "description": "Production"
+    }
+  ],
+  "paths": {
+    "/senators": {
+      "get": {
+        "summary": "List senators",
+        "description": "Returns a list of Brazilian senators. Supports filtering by active status.",
+        "parameters": [
+          {
+            "name": "active",
+            "in": "query",
+            "schema": { "type": "string", "enum": ["true", "false"] },
+            "description": "Filter by active status"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Senator list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/Senator" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/senators/{id}/expenses": {
+      "get": {
+        "summary": "Senator expenses",
+        "description": "Returns expense data for a specific senator in a given year.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          },
+          {
+            "name": "year",
+            "in": "query",
+            "schema": { "type": "integer" },
+            "description": "Fiscal year (e.g. 2026)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Expense data",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SenatorExpenseResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/summary/by-party": {
+      "get": {
+        "summary": "Expenses summary by party",
+        "description": "Returns aggregated expense data grouped by political party, per year.",
+        "responses": {
+          "200": {
+            "description": "Party summary array (one entry per year)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/PartySummaryYear" }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Senator": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "name": { "type": "string" },
+          "party": { "type": "string" },
+          "UF": { "type": "string", "description": "State abbreviation (2 chars)" },
+          "avatar_url": { "type": "string", "nullable": true }
+        },
+        "required": ["id", "name", "party"]
+      },
+      "SenatorExpenseResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "amount": { "type": "string", "description": "Expense amount as string" }
+              }
+            }
+          },
+          "meta": {
+            "type": "object",
+            "properties": {
+              "expenses_sum": { "type": "string", "nullable": true, "description": "Total expenses as string" },
+              "expenses_count": { "type": "integer" }
+            }
+          }
+        }
+      },
+      "PartySummaryYear": {
+        "type": "object",
+        "properties": {
+          "year": { "type": "string" },
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "party": { "type": "string" },
+                "total_expenses": { "type": "number" },
+                "senator_ids": {
+                  "type": "array",
+                  "items": { "type": "integer" }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "plugins": [{ "name": "next" }],
+    "paths": {
+      "@/*": ["./src/*"],
+      "@raio-x/types": ["../../libs/shared/types/src/index.ts"],
+      "@raio-x/utils": ["../../libs/shared/utils/src/index.ts"],
+      "@raio-x/api-clients/camara": ["../../libs/api-clients/camara/src/index.ts"],
+      "@raio-x/api-clients/transparencia": ["../../libs/api-clients/transparencia/src/index.ts"],
+      "@raio-x/api-clients/senado": ["../../libs/api-clients/senado/src/index.ts"],
+      "@raio-x/api-clients/tse": ["../../libs/api-clients/tse/src/index.ts"],
+      "@raio-x/cache": ["../../libs/data-access/cache/src/index.ts"]
+    }
+  },
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    ".next/dev/types/**/*.ts",
+    "**/*.mts"
+  ],
+  "exclude": ["node_modules"]
+}

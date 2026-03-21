@@ -42,3 +42,8 @@ next-env.d.ts
 
 # sonarqube
 .scannerwork/
+
+
+
+.nx/cache
+.nx/workspace-data
