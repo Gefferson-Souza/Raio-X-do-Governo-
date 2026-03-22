@@ -101,6 +101,45 @@ model ContractSnapshot {
   @@map("contract_snapshots")
 }
 
+model Politician {
+  externalId Int
+  house      String
+  nome       String
+  partido    String
+  uf         String
+  foto       String   @default("")
+  email      String?
+  active     Boolean  @default(true)
+  updatedAt  DateTime @default(now()) @updatedAt
+
+  expenses PoliticianExpense[]
+
+  @@id([externalId, house])
+  @@index([partido])
+  @@index([uf])
+  @@index([nome])
+  @@index([house])
+  @@map("politicians")
+}
+
+model PoliticianExpense {
+  id              String   @id @default(uuid())
+  politicianExtId Int
+  politicianHouse String
+  politician      Politician @relation(fields: [politicianExtId, politicianHouse], references: [externalId, house])
+  ano             Int
+  mes             Int?
+  tipoDespesa     String?
+  valor           Decimal  @db.Decimal(14, 2)
+  syncJobId       String?
+  createdAt       DateTime @default(now())
+
+  @@index([politicianExtId, politicianHouse, ano])
+  @@index([ano, mes])
+  @@index([tipoDespesa])
+  @@map("politician_expenses")
+}
+
 model DisplaySnapshot {
   id             String    @id @default(uuid())
   pageRoute      String

@@ -71,6 +71,8 @@ export class PoliticiansSyncService {
         },
       })
 
+      await this.saveNormalizedData(deputados.ranking, senadores.ranking, year, job.id)
+
       await this.audit.completeSyncJob(job.id, status, totalFetched)
       this.logger.log(`Politicians sync completed: ${deputados.ranking.length} deps, ${senadores.ranking.length} sens`)
     } catch (err) {
@@ -231,5 +233,83 @@ export class PoliticiansSyncService {
     } catch {
       return []
     }
+  }
+
+  private async saveNormalizedData(
+    deputados: ReadonlyArray<{ id: number; nome: string; partido: string; uf: string; foto: string; totalGasto: number; topDespesas: ReadonlyArray<{ tipo: string; total: number }> }>,
+    senadores: ReadonlyArray<{ id: number; nome: string; partido: string; uf: string; foto: string; totalGasto: number }>,
+    year: number,
+    syncJobId: string,
+  ) {
+    this.logger.log('Saving normalized politician data...')
+
+    for (const dep of deputados) {
+      await this.prisma.politician.upsert({
+        where: { externalId_house: { externalId: dep.id, house: 'camara' } },
+        create: {
+          externalId: dep.id,
+          house: 'camara',
+          nome: dep.nome,
+          partido: dep.partido,
+          uf: dep.uf,
+          foto: dep.foto,
+        },
+        update: {
+          nome: dep.nome,
+          partido: dep.partido,
+          uf: dep.uf,
+          foto: dep.foto,
+          updatedAt: new Date(),
+        },
+      })
+
+      for (const despesa of dep.topDespesas) {
+        await this.prisma.politicianExpense.create({
+          data: {
+            politicianExtId: dep.id,
+            politicianHouse: 'camara',
+            ano: year,
+            tipoDespesa: despesa.tipo,
+            valor: despesa.total,
+            syncJobId,
+          },
+        })
+      }
+    }
+
+    for (const sen of senadores) {
+      await this.prisma.politician.upsert({
+        where: { externalId_house: { externalId: sen.id, house: 'senado' } },
+        create: {
+          externalId: sen.id,
+          house: 'senado',
+          nome: sen.nome,
+          partido: sen.partido,
+          uf: sen.uf,
+          foto: sen.foto,
+        },
+        update: {
+          nome: sen.nome,
+          partido: sen.partido,
+          uf: sen.uf,
+          foto: sen.foto,
+          updatedAt: new Date(),
+        },
+      })
+
+      if (sen.totalGasto > 0) {
+        await this.prisma.politicianExpense.create({
+          data: {
+            politicianExtId: sen.id,
+            politicianHouse: 'senado',
+            ano: year,
+            valor: sen.totalGasto,
+            syncJobId,
+          },
+        })
+      }
+    }
+
+    this.logger.log(`Normalized: ${deputados.length} deputies + ${senadores.length} senators saved`)
   }
 }

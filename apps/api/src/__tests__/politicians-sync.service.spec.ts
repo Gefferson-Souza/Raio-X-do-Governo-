@@ -60,6 +60,12 @@ const makePrisma = () => ({
     findFirst: vi.fn().mockResolvedValue(null),
     create: vi.fn().mockResolvedValue({ id: 'snap-pol-1' }),
   },
+  politician: {
+    upsert: vi.fn().mockResolvedValue({}),
+  },
+  politicianExpense: {
+    create: vi.fn().mockResolvedValue({}),
+  },
 })
 
 const makeAudit = () => ({
