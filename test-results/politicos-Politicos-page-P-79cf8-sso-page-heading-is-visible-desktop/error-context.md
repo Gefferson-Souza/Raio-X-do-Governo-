@@ -1,0 +1,161 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - link "RAIO-X DO GOVERNO" [ref=e3] [cursor=pointer]:
+      - /url: /
+      - generic [ref=e4]: RAIO-X DO GOVERNO
+    - navigation [ref=e5]:
+      - link "GASTOS REAIS" [ref=e6] [cursor=pointer]:
+        - /url: /carrinho
+      - link "RANKING" [ref=e7] [cursor=pointer]:
+        - /url: /ranking
+      - link "POLITICOS" [ref=e8] [cursor=pointer]:
+        - /url: /politicos
+      - link "GERADOR DE IMPACTO" [ref=e9] [cursor=pointer]:
+        - /url: /gerador
+    - generic [ref=e10]:
+      - button "Buscar" [ref=e11]:
+        - generic [ref=e12]: search
+      - button "Notificações" [ref=e13]:
+        - generic [ref=e14]: notifications
+  - complementary [ref=e15]:
+    - generic [ref=e17]:
+      - generic [ref=e19]: shield
+      - generic [ref=e20]:
+        - paragraph [ref=e21]: AUDITOR CIDADÃO
+        - paragraph [ref=e22]: Fiscalização ativa
+    - navigation [ref=e23]:
+      - link "Painel da Verdade" [ref=e24] [cursor=pointer]:
+        - /url: /
+        - generic [ref=e25]: home
+        - text: Painel da Verdade
+      - link "Ranking de Gastos" [ref=e26] [cursor=pointer]:
+        - /url: /ranking
+        - generic [ref=e27]: leaderboard
+        - text: Ranking de Gastos
+      - link "Politicos" [ref=e28] [cursor=pointer]:
+        - /url: /politicos
+        - generic [ref=e29]: how_to_reg
+        - text: Politicos
+      - link "Contratos" [ref=e30] [cursor=pointer]:
+        - /url: /carrinho
+        - generic [ref=e31]: shopping_cart
+        - text: Contratos
+      - link "Gerador de Impacto" [ref=e32] [cursor=pointer]:
+        - /url: /gerador
+        - generic [ref=e33]: bolt
+        - text: Gerador de Impacto
+    - link "DENUNCIAR GASTO" [ref=e35] [cursor=pointer]:
+      - /url: https://falabr.cgu.gov.br
+      - generic [ref=e36]: campaign
+      - text: DENUNCIAR GASTO
+  - main [ref=e37]:
+    - generic [ref=e38]:
+      - link "VOLTAR" [ref=e39] [cursor=pointer]:
+        - /url: /politicos
+        - generic [ref=e40]: arrow_back
+        - text: VOLTAR
+      - generic [ref=e41]:
+        - generic [ref=e42]: CUSTO DO CONGRESSO NACIONAL — 2026
+        - paragraph [ref=e43]: R$ 1,7 milhoes
+        - paragraph [ref=e44]: Quanto deputados e senadores gastaram da cota parlamentar em 2026 ate agora
+        - paragraph [ref=e45]: "Fonte: Camara dos Deputados + Senado Federal • Atualizado em 21/03/2026"
+      - generic [ref=e46]:
+        - generic [ref=e47]:
+          - generic [ref=e48]: Por brasileiro
+          - generic [ref=e49]: R$ 0,01
+          - generic [ref=e50]: por ano
+        - generic [ref=e51]:
+          - generic [ref=e52]: Por dia
+          - generic [ref=e53]: R$ 4,7 mil
+          - generic [ref=e54]: todos os dias do ano
+        - generic [ref=e55]:
+          - generic [ref=e56]: Por minuto
+          - generic [ref=e57]: R$ 3,24
+          - generic [ref=e58]: sim, por minuto
+        - generic [ref=e59]:
+          - generic [ref=e60]: Em salarios minimos
+          - generic [ref=e61]: "1.051"
+          - generic [ref=e62]: de R$ 1.621
+      - generic [ref=e63]:
+        - heading "CAMARA vs SENADO" [level=2] [ref=e64]
+        - generic [ref=e65]:
+          - generic [ref=e66]:
+            - generic [ref=e67]:
+              - generic [ref=e68]: how_to_reg
+              - heading "CAMARA DOS DEPUTADOS" [level=3] [ref=e69]
+            - generic [ref=e70]:
+              - generic [ref=e71]:
+                - generic [ref=e72]: 20 deputados com dados em 2026
+                - generic [ref=e73]: R$ 1,4 milhoes
+              - generic [ref=e74]:
+                - generic [ref=e75]: Media por parlamentar (no ranking)
+                - generic [ref=e76]: R$ 68,3 mil/ano
+          - generic [ref=e77]:
+            - generic [ref=e78]:
+              - generic [ref=e79]: account_balance
+              - heading "SENADO FEDERAL" [level=3] [ref=e80]
+            - generic [ref=e81]:
+              - generic [ref=e82]:
+                - generic [ref=e83]: 20 senadores (ultimo ano disponivel)
+                - generic [ref=e84]: R$ 338,6 mil
+              - generic [ref=e85]:
+                - generic [ref=e86]: Media por parlamentar (no ranking)
+                - generic [ref=e87]: R$ 16,9 mil/ano
+      - generic [ref=e88]:
+        - heading "COM ESSE DINHEIRO DAVA PRA..." [level=2] [ref=e89]
+        - paragraph [ref=e90]: O que a cota parlamentar do Congresso compraria
+        - generic [ref=e91]:
+          - generic [ref=e92]:
+            - generic [ref=e93]: restaurant
+            - generic [ref=e94]: "2.434"
+            - generic [ref=e95]: cestas basicas
+            - generic [ref=e96]: DIEESE
+          - generic [ref=e97]:
+            - generic [ref=e98]: local_hospital
+            - generic [ref=e99]: "170.430"
+            - generic [ref=e100]: consultas SUS
+            - generic [ref=e101]: tabela SUS
+          - generic [ref=e102]:
+            - generic [ref=e103]: home
+            - generic [ref=e104]: "6"
+            - generic [ref=e105]: casas MCMV
+            - generic [ref=e106]: Minha Casa Minha Vida
+          - generic [ref=e107]:
+            - generic [ref=e108]: ambulance
+            - generic [ref=e109]: "3"
+            - generic [ref=e110]: ambulancias UTI
+            - generic [ref=e111]: equipadas
+          - generic [ref=e112]:
+            - generic [ref=e113]: payments
+            - generic [ref=e114]: "1.051"
+            - generic [ref=e115]: salarios minimos
+            - generic [ref=e116]: de R$ 1.621
+      - generic [ref=e117]:
+        - paragraph [ref=e118]: QUER SABER QUANTO SEU DEPUTADO GASTA?
+        - generic [ref=e119]:
+          - link "VER RANKING DE POLITICOS" [ref=e120] [cursor=pointer]:
+            - /url: /politicos
+            - generic [ref=e121]: leaderboard
+            - text: VER RANKING DE POLITICOS
+          - link "COMPARAR PARTIDOS" [ref=e122] [cursor=pointer]:
+            - /url: /politicos/partidos
+            - generic [ref=e123]: groups
+            - text: COMPARAR PARTIDOS
+  - contentinfo [ref=e124]:
+    - generic [ref=e125]:
+      - generic [ref=e126]: RAIO-X DO GOVERNO
+      - paragraph [ref=e127]: © 2026 Raio-X do Governo. Dados abertos do Portal da Transparência.
+      - navigation [ref=e128]:
+        - link "Termos de Uso" [ref=e129] [cursor=pointer]:
+          - /url: "#"
+        - link "Privacidade" [ref=e130] [cursor=pointer]:
+          - /url: "#"
+        - link "API do Governo" [ref=e131] [cursor=pointer]:
+          - /url: https://portaldatransparencia.gov.br/api-de-dados
+  - button "Open Next.js Dev Tools" [ref=e137] [cursor=pointer]:
+    - img [ref=e138]
+  - alert [ref=e141]
+```

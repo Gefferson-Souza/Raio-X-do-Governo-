@@ -1,0 +1,91 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - link "RAIO-X DO GOVERNO" [ref=e3] [cursor=pointer]:
+      - /url: /
+      - generic [ref=e4]: RAIO-X DO GOVERNO
+    - navigation [ref=e5]:
+      - link "GASTOS REAIS" [ref=e6] [cursor=pointer]:
+        - /url: /carrinho
+      - link "RANKING" [ref=e7] [cursor=pointer]:
+        - /url: /ranking
+      - link "POLITICOS" [ref=e8] [cursor=pointer]:
+        - /url: /politicos
+      - link "GERADOR DE IMPACTO" [ref=e9] [cursor=pointer]:
+        - /url: /gerador
+    - generic [ref=e10]:
+      - button "Buscar" [ref=e11]:
+        - generic [ref=e12]: search
+      - button "Notificações" [ref=e13]:
+        - generic [ref=e14]: notifications
+  - complementary [ref=e15]:
+    - generic [ref=e17]:
+      - generic [ref=e19]: shield
+      - generic [ref=e20]:
+        - paragraph [ref=e21]: AUDITOR CIDADÃO
+        - paragraph [ref=e22]: Fiscalização ativa
+    - navigation [ref=e23]:
+      - link "Painel da Verdade" [ref=e24] [cursor=pointer]:
+        - /url: /
+        - generic [ref=e25]: home
+        - text: Painel da Verdade
+      - link "Ranking de Gastos" [ref=e26] [cursor=pointer]:
+        - /url: /ranking
+        - generic [ref=e27]: leaderboard
+        - text: Ranking de Gastos
+      - link "Politicos" [ref=e28] [cursor=pointer]:
+        - /url: /politicos
+        - generic [ref=e29]: how_to_reg
+        - text: Politicos
+      - link "Contratos" [ref=e30] [cursor=pointer]:
+        - /url: /carrinho
+        - generic [ref=e31]: shopping_cart
+        - text: Contratos
+      - link "Gerador de Impacto" [ref=e32] [cursor=pointer]:
+        - /url: /gerador
+        - generic [ref=e33]: bolt
+        - text: Gerador de Impacto
+    - link "DENUNCIAR GASTO" [ref=e35] [cursor=pointer]:
+      - /url: https://falabr.cgu.gov.br
+      - generic [ref=e36]: campaign
+      - text: DENUNCIAR GASTO
+  - main [ref=e37]:
+    - generic [ref=e38]:
+      - generic [ref=e39]:
+        - generic [ref=e40]:
+          - generic [ref=e41]: schedule
+          - text: DADOS EM CACHE
+        - heading "RANKING DE GASTOS" [level=2] [ref=e42]:
+          - text: RANKING
+          - text: DE GASTOS
+        - paragraph [ref=e43]: Os orgaos que mais gastam o seu dinheiro. Transparencia nao e opcional. Cada real esta registrado. Cada ministerio no holofote.
+        - generic [ref=e44]:
+          - generic [ref=e45]: "FONTE: PORTAL DA TRANSPARENCIA"
+          - generic [ref=e47]: DADOS DE 2026
+          - generic [ref=e49]: ATUALIZADO EM 21/03/2026
+      - generic [ref=e51]:
+        - generic [ref=e52]: info
+        - paragraph [ref=e53]: Nenhum dado de orgao disponivel para o periodo selecionado.
+      - generic [ref=e54]:
+        - generic [ref=e56]:
+          - generic [ref=e57]: TEMPO REAL
+          - heading "ULTIMOS CONTRATOS" [level=3] [ref=e58]
+          - paragraph [ref=e59]: Ultimos contratos e pagamentos registrados no Portal da Transparencia.
+        - paragraph [ref=e61]: Nenhum contrato recente encontrado.
+  - contentinfo [ref=e62]:
+    - generic [ref=e63]:
+      - generic [ref=e64]: RAIO-X DO GOVERNO
+      - paragraph [ref=e65]: © 2026 Raio-X do Governo. Dados abertos do Portal da Transparência.
+      - navigation [ref=e66]:
+        - link "Termos de Uso" [ref=e67] [cursor=pointer]:
+          - /url: "#"
+        - link "Privacidade" [ref=e68] [cursor=pointer]:
+          - /url: "#"
+        - link "API do Governo" [ref=e69] [cursor=pointer]:
+          - /url: https://portaldatransparencia.gov.br/api-de-dados
+  - button "Open Next.js Dev Tools" [ref=e75] [cursor=pointer]:
+    - img [ref=e76]
+  - alert [ref=e79]
+```

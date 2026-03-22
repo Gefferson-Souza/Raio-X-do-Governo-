@@ -1,0 +1,164 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - link "RAIO-X DO GOVERNO" [ref=e3] [cursor=pointer]:
+      - /url: /
+      - generic [ref=e4]: RAIO-X DO GOVERNO
+    - generic [ref=e5]:
+      - button "Buscar" [ref=e6]:
+        - generic [ref=e7]: search
+      - button "Notificações" [ref=e8]:
+        - generic [ref=e9]: notifications
+  - main [ref=e10]:
+    - generic [ref=e11]:
+      - generic [ref=e12]:
+        - generic [ref=e13]: DADOS OFICIAIS DO PORTAL DA TRANSPARENCIA
+        - heading "PRA ONDE VAI SEU DINHEIRO?" [level=1] [ref=e14]:
+          - text: PRA ONDE VAI
+          - text: SEU DINHEIRO?
+        - paragraph [ref=e15]: Veja em tempo real quanto o governo federal gasta e em que ele gasta. Dados oficiais, atualizados a cada 5 minutos.
+      - paragraph [ref=e17]:
+        - strong [ref=e18]: "O que voce esta vendo:"
+        - text: Este painel mostra quanto dinheiro o governo federal brasileiro gastou em 2026, segundo dados oficiais do
+        - link "Portal da Transparencia" [ref=e19] [cursor=pointer]:
+          - /url: https://portaldatransparencia.gov.br
+        - text: . Os valores sao atualizados automaticamente a cada 5 minutos.
+      - generic [ref=e21]:
+        - generic [ref=e22]:
+          - generic [ref=e23]: TOTAL GASTO PELO GOVERNO EM 2026
+          - generic [ref=e24]: R$ 0,00
+        - generic [ref=e25]:
+          - generic [ref=e26]:
+            - text: De cada R$ 100 no orcamento,
+            - strong [ref=e27]: R$ 0 ja foram gastos
+          - progressbar "0% do orcamento ja foi gasto" [ref=e28]
+      - generic [ref=e29]:
+        - generic [ref=e31]:
+          - generic [ref=e32]: PRA ONDE FOI?
+          - heading "GASTOU COM O QUE?" [level=2] [ref=e33]
+          - paragraph [ref=e34]: Os orgaos que mais receberam dinheiro publico em 2026
+          - paragraph [ref=e35]: Dados por orgao nao disponiveis no momento.
+          - link "VER RANKING COMPLETO" [ref=e36] [cursor=pointer]:
+            - /url: /ranking
+            - text: VER RANKING COMPLETO
+            - generic [ref=e37]: arrow_forward
+        - generic [ref=e40]:
+          - generic [ref=e41]: update
+          - text: Atualizado agora mesmo
+      - link "CALCULAR MEU PREJUIZO" [ref=e43] [cursor=pointer]:
+        - /url: /gerador
+      - generic [ref=e44]:
+        - generic [ref=e45]:
+          - generic [ref=e46]:
+            - generic [ref=e47]: DADOS ABERTOS
+            - heading "CONTRATOS RECENTES" [level=2] [ref=e48]
+            - paragraph [ref=e49]: Os maiores contratos assinados recentemente. Valores que merecem a sua atencao.
+          - link "VER TODOS OS CONTRATOS" [ref=e50] [cursor=pointer]:
+            - /url: /carrinho
+        - paragraph [ref=e51]:
+          - text: Estes sao contratos reais assinados pelo governo federal. Cada um pode ser verificado no
+          - link "Portal da Transparencia" [ref=e52] [cursor=pointer]:
+            - /url: https://portaldatransparencia.gov.br/contratos
+          - text: .
+        - paragraph [ref=e54]: Nenhum contrato encontrado para o periodo selecionado.
+      - generic [ref=e55]:
+        - generic [ref=e56]:
+          - generic [ref=e57]: TRADUZINDO EM MIUDOS
+          - heading "O GOVERNO JA GASTOU R$ 0,0 TRILHOES EM 2026" [level=2] [ref=e58]
+          - paragraph [ref=e59]: "Parece um numero impossivel de entender, ne? Entao veja o que isso significa na pratica:"
+        - generic [ref=e60]:
+          - generic [ref=e61]:
+            - generic [ref=e63]: person
+            - generic [ref=e64]: R$ 0
+            - generic [ref=e65]: POR CADA BRASILEIRO
+            - paragraph [ref=e66]: Se dividissemos igualmente entre todos os 213 milhoes de habitantes do Brasil
+          - generic [ref=e67]:
+            - generic [ref=e69]: family_restroom
+            - generic [ref=e70]: R$ 0
+            - generic [ref=e71]: POR FAMILIA DE 4 PESSOAS
+            - paragraph [ref=e72]: Da para comprar um carro popular com o que o governo gastou da sua familia
+          - generic [ref=e73]:
+            - generic [ref=e75]: schedule
+            - generic [ref=e76]: R$ 0,00
+            - generic [ref=e77]: POR DIA
+            - paragraph [ref=e78]: O governo gasta isso a cada 24 horas, incluindo fins de semana e feriados
+          - generic [ref=e79]:
+            - generic [ref=e81]: payments
+            - generic [ref=e82]: "0"
+            - generic [ref=e83]: SALARIOS MINIMOS POR PESSOA
+            - paragraph [ref=e84]: A parte de cada brasileiro equivale a 0 meses de salario minimo (R$ 1.621)
+      - generic [ref=e85]:
+        - heading "O QUE DARIA PRA FAZER COM ESSE DINHEIRO?" [level=2] [ref=e86]
+        - paragraph [ref=e87]: Comparacoes reais para voce entender o tamanho desse gasto.
+        - generic [ref=e88]:
+          - generic [ref=e89]:
+            - generic [ref=e91]: lunch_dining
+            - generic [ref=e92]:
+              - text: Muitos anos
+              - paragraph [ref=e93]: ALIMENTANDO TODAS AS CRIANCAS NA ESCOLA
+              - paragraph [ref=e94]: Daria para pagar a merenda de todos os 47 milhoes de estudantes brasileiros por muitos anos
+          - generic [ref=e95]:
+            - generic [ref=e97]: school
+            - generic [ref=e98]:
+              - generic [ref=e99]: 0 escolas
+              - paragraph [ref=e100]: PODERIAM SER CONSTRUIDAS
+              - paragraph [ref=e101]: Cada escola custa R$ 5 milhoes (padrao FNDE com 6 salas e quadra esportiva). Daria uma escola nova para cada bairro do Brasil
+          - generic [ref=e102]:
+            - generic [ref=e104]: favorite
+            - generic [ref=e105]:
+              - text: Muitos anos
+              - paragraph [ref=e106]: DO BOLSA FAMILIA
+              - paragraph [ref=e107]: Seria possivel manter o programa Bolsa Familia funcionando por muitos anos, atendendo todas as familias cadastradas
+          - generic [ref=e108]:
+            - generic [ref=e110]: local_hospital
+            - generic [ref=e111]:
+              - generic [ref=e112]: 0 consultas
+              - paragraph [ref=e113]: POR BRASILEIRO NO SUS
+              - paragraph [ref=e114]: Cada brasileiro poderia ir ao medico 0 vezes com o valor total gasto pelo governo
+      - generic [ref=e115]:
+        - generic [ref=e116]: receipt_long
+        - heading "Seu imposto, suas regras. Fiscalize." [level=2] [ref=e117]
+        - paragraph [ref=e118]: Compartilhe esses dados para que mais pessoas saibam como o dinheiro publico e usado.
+        - paragraph [ref=e120]: "#RaioXDoGoverno"
+      - generic [ref=e121]:
+        - generic:
+          - generic: search
+        - generic [ref=e122]:
+          - heading "FISCALIZE. COMPARTILHE. COBRE." [level=2] [ref=e123]
+          - paragraph [ref=e124]: Nenhum centavo pode sumir quando milhoes de olhos estao vigiando. Veja o ranking dos orgaos que mais gastam e acompanhe cada real.
+          - link "VER RANKING DE GASTOS" [ref=e125] [cursor=pointer]:
+            - /url: /ranking
+  - contentinfo [ref=e126]:
+    - generic [ref=e127]:
+      - generic [ref=e128]: RAIO-X DO GOVERNO
+      - paragraph [ref=e129]: © 2026 Raio-X do Governo. Dados abertos do Portal da Transparência.
+      - navigation [ref=e130]:
+        - link "Termos de Uso" [ref=e131] [cursor=pointer]:
+          - /url: "#"
+        - link "Privacidade" [ref=e132] [cursor=pointer]:
+          - /url: "#"
+        - link "API do Governo" [ref=e133] [cursor=pointer]:
+          - /url: https://portaldatransparencia.gov.br/api-de-dados
+  - navigation [ref=e134]:
+    - link "Inicio" [ref=e135] [cursor=pointer]:
+      - /url: /
+      - generic [ref=e136]: home
+      - generic [ref=e137]: Inicio
+    - link "Ranking" [ref=e138] [cursor=pointer]:
+      - /url: /ranking
+      - generic [ref=e139]: leaderboard
+      - generic [ref=e140]: Ranking
+    - link "Politicos" [ref=e141] [cursor=pointer]:
+      - /url: /politicos
+      - generic [ref=e142]: how_to_reg
+      - generic [ref=e143]: Politicos
+    - link "Gerador" [ref=e144] [cursor=pointer]:
+      - /url: /gerador
+      - generic [ref=e145]: bolt
+      - generic [ref=e146]: Gerador
+  - button "Open Next.js Dev Tools" [ref=e152] [cursor=pointer]:
+    - img [ref=e153]
+  - alert [ref=e156]
+```

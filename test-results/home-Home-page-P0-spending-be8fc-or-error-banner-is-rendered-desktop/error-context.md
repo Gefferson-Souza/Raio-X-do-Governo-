@@ -1,0 +1,180 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - link "RAIO-X DO GOVERNO" [ref=e3] [cursor=pointer]:
+      - /url: /
+      - generic [ref=e4]: RAIO-X DO GOVERNO
+    - navigation [ref=e5]:
+      - link "GASTOS REAIS" [ref=e6] [cursor=pointer]:
+        - /url: /carrinho
+      - link "RANKING" [ref=e7] [cursor=pointer]:
+        - /url: /ranking
+      - link "POLITICOS" [ref=e8] [cursor=pointer]:
+        - /url: /politicos
+      - link "GERADOR DE IMPACTO" [ref=e9] [cursor=pointer]:
+        - /url: /gerador
+    - generic [ref=e10]:
+      - button "Buscar" [ref=e11]:
+        - generic [ref=e12]: search
+      - button "Notificações" [ref=e13]:
+        - generic [ref=e14]: notifications
+  - complementary [ref=e15]:
+    - generic [ref=e17]:
+      - generic [ref=e19]: shield
+      - generic [ref=e20]:
+        - paragraph [ref=e21]: AUDITOR CIDADÃO
+        - paragraph [ref=e22]: Fiscalização ativa
+    - navigation [ref=e23]:
+      - link "Painel da Verdade" [ref=e24] [cursor=pointer]:
+        - /url: /
+        - generic [ref=e25]: home
+        - text: Painel da Verdade
+      - link "Ranking de Gastos" [ref=e26] [cursor=pointer]:
+        - /url: /ranking
+        - generic [ref=e27]: leaderboard
+        - text: Ranking de Gastos
+      - link "Politicos" [ref=e28] [cursor=pointer]:
+        - /url: /politicos
+        - generic [ref=e29]: how_to_reg
+        - text: Politicos
+      - link "Contratos" [ref=e30] [cursor=pointer]:
+        - /url: /carrinho
+        - generic [ref=e31]: shopping_cart
+        - text: Contratos
+      - link "Gerador de Impacto" [ref=e32] [cursor=pointer]:
+        - /url: /gerador
+        - generic [ref=e33]: bolt
+        - text: Gerador de Impacto
+    - link "DENUNCIAR GASTO" [ref=e35] [cursor=pointer]:
+      - /url: https://falabr.cgu.gov.br
+      - generic [ref=e36]: campaign
+      - text: DENUNCIAR GASTO
+  - main [ref=e37]:
+    - generic [ref=e38]:
+      - generic [ref=e39]:
+        - generic [ref=e40]: DADOS OFICIAIS DO PORTAL DA TRANSPARENCIA
+        - heading "PRA ONDE VAI SEU DINHEIRO?" [level=1] [ref=e41]:
+          - text: PRA ONDE VAI
+          - text: SEU DINHEIRO?
+        - paragraph [ref=e42]: Veja em tempo real quanto o governo federal gasta e em que ele gasta. Dados oficiais, atualizados a cada 5 minutos.
+      - paragraph [ref=e44]:
+        - strong [ref=e45]: "O que voce esta vendo:"
+        - text: Este painel mostra quanto dinheiro o governo federal brasileiro gastou em 2026, segundo dados oficiais do
+        - link "Portal da Transparencia" [ref=e46] [cursor=pointer]:
+          - /url: https://portaldatransparencia.gov.br
+        - text: . Os valores sao atualizados automaticamente a cada 5 minutos.
+      - generic [ref=e48]:
+        - generic [ref=e49]:
+          - generic [ref=e50]: TOTAL GASTO PELO GOVERNO EM 2026
+          - generic [ref=e51]: R$ 0,00
+        - generic [ref=e52]:
+          - generic [ref=e53]:
+            - text: De cada R$ 100 no orcamento,
+            - strong [ref=e54]: R$ 0 ja foram gastos
+          - progressbar "0% do orcamento ja foi gasto" [ref=e55]
+      - generic [ref=e56]:
+        - generic [ref=e58]:
+          - generic [ref=e59]: PRA ONDE FOI?
+          - heading "GASTOU COM O QUE?" [level=2] [ref=e60]
+          - paragraph [ref=e61]: Os orgaos que mais receberam dinheiro publico em 2026
+          - paragraph [ref=e62]: Dados por orgao nao disponiveis no momento.
+          - link "VER RANKING COMPLETO" [ref=e63] [cursor=pointer]:
+            - /url: /ranking
+            - text: VER RANKING COMPLETO
+            - generic [ref=e64]: arrow_forward
+        - generic [ref=e67]:
+          - generic [ref=e68]: update
+          - text: Atualizado agora mesmo
+      - generic [ref=e69]:
+        - generic [ref=e70]:
+          - generic [ref=e71]:
+            - generic [ref=e72]: DADOS ABERTOS
+            - heading "CONTRATOS RECENTES" [level=2] [ref=e73]
+            - paragraph [ref=e74]: Os maiores contratos assinados recentemente. Valores que merecem a sua atencao.
+          - link "VER TODOS OS CONTRATOS" [ref=e75] [cursor=pointer]:
+            - /url: /carrinho
+        - paragraph [ref=e76]:
+          - text: Estes sao contratos reais assinados pelo governo federal. Cada um pode ser verificado no
+          - link "Portal da Transparencia" [ref=e77] [cursor=pointer]:
+            - /url: https://portaldatransparencia.gov.br/contratos
+          - text: .
+        - paragraph [ref=e79]: Nenhum contrato encontrado para o periodo selecionado.
+      - generic [ref=e80]:
+        - generic [ref=e81]:
+          - generic [ref=e82]: TRADUZINDO EM MIUDOS
+          - heading "O GOVERNO JA GASTOU R$ 0,0 TRILHOES EM 2026" [level=2] [ref=e83]
+          - paragraph [ref=e84]: "Parece um numero impossivel de entender, ne? Entao veja o que isso significa na pratica:"
+        - generic [ref=e85]:
+          - generic [ref=e86]:
+            - generic [ref=e88]: person
+            - generic [ref=e89]: R$ 0
+            - generic [ref=e90]: POR CADA BRASILEIRO
+            - paragraph [ref=e91]: Se dividissemos igualmente entre todos os 213 milhoes de habitantes do Brasil
+          - generic [ref=e92]:
+            - generic [ref=e94]: family_restroom
+            - generic [ref=e95]: R$ 0
+            - generic [ref=e96]: POR FAMILIA DE 4 PESSOAS
+            - paragraph [ref=e97]: Da para comprar um carro popular com o que o governo gastou da sua familia
+          - generic [ref=e98]:
+            - generic [ref=e100]: schedule
+            - generic [ref=e101]: R$ 0,00
+            - generic [ref=e102]: POR DIA
+            - paragraph [ref=e103]: O governo gasta isso a cada 24 horas, incluindo fins de semana e feriados
+          - generic [ref=e104]:
+            - generic [ref=e106]: payments
+            - generic [ref=e107]: "0"
+            - generic [ref=e108]: SALARIOS MINIMOS POR PESSOA
+            - paragraph [ref=e109]: A parte de cada brasileiro equivale a 0 meses de salario minimo (R$ 1.621)
+      - generic [ref=e110]:
+        - heading "O QUE DARIA PRA FAZER COM ESSE DINHEIRO?" [level=2] [ref=e111]
+        - paragraph [ref=e112]: Comparacoes reais para voce entender o tamanho desse gasto.
+        - generic [ref=e113]:
+          - generic [ref=e114]:
+            - generic [ref=e116]: lunch_dining
+            - generic [ref=e117]:
+              - text: Muitos anos
+              - paragraph [ref=e118]: ALIMENTANDO TODAS AS CRIANCAS NA ESCOLA
+              - paragraph [ref=e119]: Daria para pagar a merenda de todos os 47 milhoes de estudantes brasileiros por muitos anos
+          - generic [ref=e120]:
+            - generic [ref=e122]: school
+            - generic [ref=e123]:
+              - generic [ref=e124]: 0 escolas
+              - paragraph [ref=e125]: PODERIAM SER CONSTRUIDAS
+              - paragraph [ref=e126]: Cada escola custa R$ 5 milhoes (padrao FNDE com 6 salas e quadra esportiva). Daria uma escola nova para cada bairro do Brasil
+          - generic [ref=e127]:
+            - generic [ref=e129]: favorite
+            - generic [ref=e130]:
+              - text: Muitos anos
+              - paragraph [ref=e131]: DO BOLSA FAMILIA
+              - paragraph [ref=e132]: Seria possivel manter o programa Bolsa Familia funcionando por muitos anos, atendendo todas as familias cadastradas
+          - generic [ref=e133]:
+            - generic [ref=e135]: local_hospital
+            - generic [ref=e136]:
+              - generic [ref=e137]: 0 consultas
+              - paragraph [ref=e138]: POR BRASILEIRO NO SUS
+              - paragraph [ref=e139]: Cada brasileiro poderia ir ao medico 0 vezes com o valor total gasto pelo governo
+      - generic [ref=e140]:
+        - generic:
+          - generic: search
+        - generic [ref=e141]:
+          - heading "FISCALIZE. COMPARTILHE. COBRE." [level=2] [ref=e142]
+          - paragraph [ref=e143]: Nenhum centavo pode sumir quando milhoes de olhos estao vigiando. Veja o ranking dos orgaos que mais gastam e acompanhe cada real.
+          - link "VER RANKING DE GASTOS" [ref=e144] [cursor=pointer]:
+            - /url: /ranking
+  - contentinfo [ref=e145]:
+    - generic [ref=e146]:
+      - generic [ref=e147]: RAIO-X DO GOVERNO
+      - paragraph [ref=e148]: © 2026 Raio-X do Governo. Dados abertos do Portal da Transparência.
+      - navigation [ref=e149]:
+        - link "Termos de Uso" [ref=e150] [cursor=pointer]:
+          - /url: "#"
+        - link "Privacidade" [ref=e151] [cursor=pointer]:
+          - /url: "#"
+        - link "API do Governo" [ref=e152] [cursor=pointer]:
+          - /url: https://portaldatransparencia.gov.br/api-de-dados
+  - button "Open Next.js Dev Tools" [ref=e158] [cursor=pointer]:
+    - img [ref=e159]
+  - alert [ref=e162]
+```
