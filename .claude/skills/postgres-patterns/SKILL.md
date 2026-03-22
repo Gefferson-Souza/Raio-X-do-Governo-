@@ -1,6 +1,6 @@
 ---
 name: postgres-patterns
-description: PostgreSQL database patterns for query optimization, schema design, indexing, and security. Based on Supabase best practices.
+description: PostgreSQL database patterns for query optimization, schema design, indexing, security, and Prisma ORM integration.
 origin: ECC
 ---
 
@@ -63,7 +63,7 @@ CREATE INDEX idx ON users (email) WHERE deleted_at IS NULL;
 **RLS Policy (Optimized):**
 ```sql
 CREATE POLICY policy ON orders
-  USING ((SELECT auth.uid()) = user_id);  -- Wrap in SELECT!
+  USING (user_id = current_setting('app.current_user_id')::uuid);
 ```
 
 **UPSERT:**
@@ -136,12 +136,35 @@ REVOKE ALL ON SCHEMA public FROM public;
 SELECT pg_reload_conf();
 ```
 
+## Prisma ORM Integration
+
+```typescript
+// Raw query for complex operations Prisma can't express
+const result = await prisma.$queryRaw`
+  SELECT * FROM users
+  WHERE email = ${email}
+  AND deleted_at IS NULL
+`
+
+// Transaction with Prisma
+await prisma.$transaction([
+  prisma.order.create({ data: orderData }),
+  prisma.inventory.update({
+    where: { productId },
+    data: { quantity: { decrement: 1 } }
+  })
+])
+
+// Query optimization: select only needed fields
+const users = await prisma.user.findMany({
+  select: { id: true, name: true, email: true },
+  where: { isActive: true },
+  take: 20,
+  orderBy: { createdAt: 'desc' }
+})
+```
+
 ## Related
 
 - Agent: `database-reviewer` - Full database review workflow
-- Skill: `clickhouse-io` - ClickHouse analytics patterns
 - Skill: `backend-patterns` - API and backend patterns
-
----
-
-*Based on Supabase Agent Skills (credit: Supabase team) (MIT License)*

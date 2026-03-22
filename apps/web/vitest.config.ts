@@ -7,6 +7,8 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     setupFiles: [],
+    include: ['apps/web/src/**/*.{test,spec}.{ts,tsx}'],
+    root: resolve(__dirname, '../..'),
     coverage: {
       provider: 'v8',
       reporter: ['text', 'lcov', 'json-summary'],
