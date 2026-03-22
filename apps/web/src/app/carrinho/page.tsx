@@ -162,7 +162,7 @@ export default async function CarrinhoPage() {
       {hasContracts && (
         <section className="mt-8">
           <div className="flex flex-col gap-0 border-2 border-outline-variant bg-white">
-            {displayItems.map((item) => {
+            {displayItems.map((item, index) => {
               if (item.kind === 'collapsed') {
                 return (
                   <div
@@ -191,7 +191,7 @@ export default async function CarrinhoPage() {
 
               return (
                 <div
-                  key={contrato.id}
+                  key={`${contrato.id}-${index}`}
                   className="border-b border-outline-variant last:border-b-0 p-6 flex flex-col md:flex-row md:items-start gap-4"
                 >
                   <div className="flex items-center justify-center w-10 h-10 bg-surface-container-high shrink-0">

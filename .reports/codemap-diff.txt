@@ -1,71 +1,59 @@
-Codemap Update Report — 2026-03-20
+Codemap Update Report — 2026-03-22
 ====================================
 
-Previous scan: 42 files | Current scan: 56 files (+14 new)
+Previous scan: 2026-03-20 (56 files) | Current scan: 2026-03-22 (66+ files)
+Diff: >80% rewrite (major architecture change: added NestJS backend + PostgreSQL)
 
 ## Major Changes
 
-### New Feature: Politicians (Politicos)
-The entire politicians feature was missing from previous codemaps.
+### Architecture: Cache-only → Full Backend + Database
+- Previous: No database, all data from external APIs + ephemeral cache
+- Current: NestJS 11 backend + PostgreSQL 16 + Prisma 7 ORM + versioned snapshots
 
-Added to architecture.md:
-  + Politicians data flow (Camara + Senado APIs -> cache -> SSR -> client)
-  + Cron job architecture (daily 6am pre-fetch)
-  + 4 external API sources (was 1)
+### New: NestJS Backend (apps/api/)
+  + 7 modules: health, spending, politicians, contracts, sync, audit, admin
+  + Cron sync via @nestjs/schedule (5AM politicians, 6AM spending+contracts)
+  + Full audit trail: sync_jobs + raw_responses (SHA256 hash per API call)
+  + Snapshot pattern: versioned data with isLatest flag
 
-Added to backend.md:
-  + GET /api/politicians route (132 lines)
-  + GET /api/cron/politicians route (359 lines)
-  + politicians-service.ts service chain
-  + camara.ts API client (84 lines)
-  + senado.ts API client (103 lines)
-  + camara-types.ts type definitions (114 lines)
+### New: Database Tables
+  + sync_jobs (sync run tracking)
+  + raw_responses (API call audit)
+  + politicians_snapshots (versioned)
+  + spending_snapshots (versioned, by year)
+  + contract_snapshots (versioned)
+  + display_snapshots (UI audit trail)
 
-Added to frontend.md:
-  + /politicos page (28 lines)
-  + /politicos/deputados/[id] page (172 lines)
-  + /politicos/congresso page (159 lines)
-  + /politicos/partidos page (177 lines)
-  + PoliticiansContent component (429 lines - largest component)
-  + Badge, LastUpdated components
+### New: Dependencies
+  + @nestjs/* (common, core, platform-express, config, schedule)
+  + @prisma/client + prisma
+  + reflect-metadata, rxjs
 
-Added to data.md:
-  + PoliticiansData, DeputadoResumo, SenadorResumo, PartidoResumo types
-  + politicians-data cache key (TTL 3600s / 86400s for cron)
+### API Routes Changed
+  Previous: Next.js route handlers → direct external API calls
+  Current: Next.js BFF → NestJS /api/v1/* → Prisma → PostgreSQL
 
-Added to dependencies.md:
-  + Camara dos Deputados API (dadosabertos.camara.leg.br)
-  + Senate/Codante API (apis.codante.io)
-  + TSE API (reserved, divulgacandcontas.tse.jus.br)
-  + CRON_SECRET env var
+## Files Added (+22)
+  apps/api/src/main.ts
+  apps/api/src/app.module.ts
+  apps/api/src/prisma.module.ts
+  apps/api/src/health/{controller,module}.ts
+  apps/api/src/spending/{controller,module,service}.ts
+  apps/api/src/politicians/{controller,module,service}.ts
+  apps/api/src/contracts/{controller,module,service}.ts
+  apps/api/src/sync/{spending,politicians,contracts}-sync.service.ts
+  apps/api/src/sync/{sync.module,sync-scheduler.service}.ts
+  apps/api/src/audit/{audit.module,audit.service}.ts
+  apps/api/src/admin/admin.controller.ts
+  apps/api/prisma/schema.prisma
+  apps/api/__tests__/*.spec.ts (4 test files)
 
-## Files Added Since Last Scan (+14)
-  src/app/politicos/page.tsx
-  src/app/politicos/deputados/[id]/page.tsx
-  src/app/politicos/congresso/page.tsx
-  src/app/politicos/partidos/page.tsx
-  src/app/api/politicians/route.ts
-  src/app/api/cron/politicians/route.ts
-  src/lib/api/camara.ts
-  src/lib/api/senado.ts
-  src/lib/api/tse.ts
-  src/lib/api/camara-types.ts
-  src/lib/services/politicians-service.ts
-  src/components/ui/politicians-content.tsx
-  src/components/ui/badge.tsx
-  src/components/ui/last-updated.tsx
-
-## Files Modified
-  src/lib/api/types.ts (81 -> 138 lines, politician types added)
-  src/app/api/og/route.tsx (196 -> 213 lines, LinkedIn sharing)
-  src/lib/utils/share.ts (added LinkedIn sharing)
+## Codemap Diff
+  architecture.md: ~90% rewritten (new system diagram, data flow, decisions)
+  backend.md:      ~95% rewritten (NestJS routes, sync services, module graph)
+  frontend.md:     ~30% updated (services now proxy to NestJS, minor adjustments)
+  data.md:         ~80% rewritten (database schema, snapshot types added)
+  dependencies.md: ~60% updated (NestJS deps, env vars, infrastructure)
 
 ## Staleness Warnings
-  None - all codemaps freshly updated.
-
-## Diff Percentage
-  architecture.md: ~45% new content
-  backend.md:      ~55% new content
-  frontend.md:     ~40% new content
-  data.md:         ~50% new content
-  dependencies.md: ~35% new content
+  None — all codemaps freshly generated.

@@ -1,71 +1,76 @@
-<!-- Generated: 2026-03-20 | Files scanned: 56 | Token estimate: ~850 -->
+<!-- Generated: 2026-03-22 | Files scanned: 48 | Token estimate: ~700 -->
 
 # Architecture
 
 ## System Overview
 
-Next.js 16 SSR dashboard consuming multiple Brazilian government APIs.
-Hybrid rendering: Server Components (ISR 300s) + client-side polling (React Query 5min).
-Cron job (daily 6am) pre-fetches politicians data.
+Nx monorepo: Next.js 16 frontend + NestJS 11 backend + PostgreSQL 16 + Redis 7.
+Data sourced from Portal da Transparencia API, stored in versioned snapshots.
+Daily cron sync (5-6 AM) via @nestjs/schedule.
 
 ```
-┌─────────────────────────────────────────────────────────────────────┐
-│                           Browser                                    │
-│  ┌────────┐ ┌────────┐ ┌─────────┐ ┌────────┐ ┌──────────────────┐ │
-│  │ / home │ │/ranking│ │/carrinho│ │/gerador│ │  /politicos/*   │ │
-│  └───┬────┘ └───┬────┘ └───┬─────┘ └────────┘ └───────┬─────────┘ │
-│      │          │          │                           │            │
-│      └──────────┼──────────┘                           │            │
-│                 ▼                                      ▼            │
-│     SpendingPoller (useQuery 5min)      PoliticiansContent (useQuery│
-│                 │                          refetchInterval 1h)      │
-└─────────────────┼──────────────────────────┼────────────────────────┘
-                  ▼                          ▼
-       GET /api/spending          GET /api/politicians
-                  │                          │
-┌─────────────────┼──────────────────────────┼────────────────────────┐
-│  Next.js Server │                          │                        │
-│                 ▼                          ▼                        │
-│  ┌──────────────────────────────────────────────────┐               │
-│  │    Service Layer                                  │               │
-│  │  spending-service.ts    ← cache-aside (TTL 300s) │               │
-│  │  contracts-service.ts   ← cache-aside (TTL 600s) │               │
-│  │  politicians-service.ts ← cache-aside (TTL 3600s)│               │
-│  └───────────────────────┬──────────────────────────┘               │
-│                          ▼                                          │
-│  ┌──────────────────────────────────────────────────┐               │
-│  │    Cache Layer (cache.ts)                         │               │
-│  │    Redis (Upstash) ──fallback──→ In-memory Map    │               │
-│  └───────────────────────┬──────────────────────────┘               │
-│                          ▼                                          │
-│  ┌──────────────────────────────────────────────────┐               │
-│  │    API Clients                                    │               │
-│  │  transparency.ts  → Portal da Transparência       │               │
-│  │  camara.ts        → Câmara dos Deputados          │               │
-│  │  senado.ts        → Senado (via Codante)          │               │
-│  │  tse.ts           → Tribunal Superior Eleitoral   │               │
-│  └───────────────────────┬──────────────────────────┘               │
-└──────────────────────────┼──────────────────────────────────────────┘
-                           ▼
-  ┌─────────────────────────────────────────────┐
-  │  External APIs                               │
-  │  - api.portaldatransparencia.gov.br          │
-  │  - dadosabertos.camara.leg.br                │
-  │  - apis.codante.io/senator-expenses          │
-  │  - divulgacandcontas.tse.jus.br (reserved)   │
-  └─────────────────────────────────────────────┘
+Browser (mobile-first)
+    |
+    v
+[Next.js 16 - App Router]  :3000
+    |  Server Components (ISR: 5min spending, 1h politicians)
+    |  Route Handlers (BFF thin → proxy to NestJS)
+    |  Client: React Query polling, framer-motion, nuqs
+    |
+    v
+[NestJS 11 API]  :3001  (prefix: /api/v1)
+    |  Controllers -> Services -> PrismaService
+    |  Modules: health, spending, politicians, contracts, sync, audit, admin
+    |  Cron: @nestjs/schedule (daily 5-6 AM)
+    |
+    +---> [PostgreSQL 16]  :5432/5433
+    |       sync_jobs (audit trail)
+    |       raw_responses (every API call logged with SHA256)
+    |       politicians_snapshots, spending_snapshots, contract_snapshots
+    |
+    +---> [Redis 7]  :6379
+    |       Next.js cache layer (Upstash in prod, local in dev)
+    |
+    +---> [External APIs]
+            Portal da Transparencia (spending, contracts)
+            Camara dos Deputados (deputies)
+            Codante (senators, parties)
+```
 
-Cron: GET /api/cron/politicians (daily 6am via vercel.json)
-  └── Fetches deputies + senators + parties → stores in cache (TTL 24h)
+## Monorepo Layout (Nx)
+
+```
+apps/
+  web/     Next.js 16 (React 19, Tailwind 4, Vitest)
+  api/     NestJS 11 (Prisma 7, PostgreSQL 16)
+libs/
+  shared/types/   @raio-x/types   (politicians, transparency interfaces)
+  shared/utils/   @raio-x/utils   (format, equivalences, constants)
+  api-clients/    @raio-x/api-clients/*  (placeholder: camara, senado, tse, transparencia)
+  data-access/    @raio-x/cache   (placeholder: Redis cache layer)
+e2e/             Playwright (desktop Chrome + mobile Pixel 7)
+```
+
+## Data Flow
+
+```
+Portal da Transparencia --> SyncService (cron daily 5-6AM)
+  --> AuditService.saveRawResponse (SHA256 hash, timing, size)
+  --> SyncJob (tracks fetch status, counts, errors)
+  --> Snapshot (versioned, isLatest flag)
+      --> NestJS GET endpoint
+          --> Next.js BFF route handler (cache headers)
+              --> Server Component (ISR revalidate)
+                  --> Client Component (React Query poll)
 ```
 
 ## Key Architectural Decisions
 
-- **ISR (300s)** on all data pages → fast loads, near-real-time data
-- **Cache-aside pattern** in service layer → resilient to API downtime
-- **Two-tier cache** (Redis + in-memory) → works with or without Upstash
-- **Error boundaries** return zero-value objects with `source: 'error'` → pages always render
-- **No database** → all data sourced from external APIs + ephemeral cache
-- **Edge OG image generation** → social sharing cards rendered on `/api/og`
-- **Daily cron pre-fetch** → politicians data always warm in cache
-- **Rate limiting** → 300ms inter-request delay to respect API limits
+- **Snapshot pattern**: Versioned data with `isLatest` flag for instant rollback
+- **Full audit trail**: Every external API call → `raw_responses` with SHA256, timing, size
+- **BFF thin**: Next.js route handlers proxy to NestJS, add cache headers
+- **ISR revalidation**: spending=5min, politicians=1h, contracts=10min
+- **Two-tier cache**: Redis (Upstash prod) + in-memory fallback
+- **Error resilience**: Services return empty data with `source: 'error'`, pages always render
+- **Rate limiting**: 300ms inter-request delay for external APIs
+- **No auth on public endpoints**: Admin sync endpoint needs protection in prod

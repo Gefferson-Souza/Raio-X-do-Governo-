@@ -1,124 +1,79 @@
-<!-- Generated: 2026-03-20 | Files scanned: 56 | Token estimate: ~800 -->
+<!-- Generated: 2026-03-22 | Files scanned: 12 | Token estimate: ~700 -->
 
 # Data
 
-## No Database
+## Database (PostgreSQL 16 via Prisma 7)
 
-All data sourced from external government APIs and cached ephemerally (Redis or in-memory).
+Schema: `apps/api/prisma/schema.prisma`
 
-## Core Types (src/lib/api/types.ts)
-
-```
-SpendingSummary {
-  totalPago: number           Total spending (R$)
-  totalEmpenhado: number      Total committed budget
-  totalLiquidado: number      Total settled
-  totalOrcamento: number      Total budget approved
-  porOrgao: DespesaPorOrgao[] Per-ministry breakdown
-  updatedAt: string           ISO timestamp
-  source: 'live' | 'cached' | 'error'
-}
-
-DespesaPorOrgao {
-  codigo, codigoOrgaoSuperior: number
-  orgaoSuperior: string       Ministry name
-  despesaPaga: number         Paid amount
-  despesaEmpenhada: number    Committed
-  despesaLiquidada: number    Settled
-  orcamentoRealizado: number  Budget executed
-}
-
-Contrato {
-  id: string
-  dataVigenciaInicio/Fim: string
-  valorInicialCompra: number
-  valorFinalCompra: number
-  objeto: string              Contract description
-  compra: { numero, tipo }
-  fornecedor: { nome, cnpjFormatado }
-  unidadeGestora: { orgaoVinculado: { codigoSIAFI, nome } }
-}
-```
-
-## Politician Types (src/lib/api/camara-types.ts)
+### Tables
 
 ```
-PoliticiansData {
-  deputados: DeputadoResumo[]
-  senadores: SenadorResumo[]
-  partidos: PartidoResumo[]
-  atualizadoEm: string       ISO timestamp
-  fonte: 'live' | 'cached' | 'error'
-}
+sync_jobs
+  id (uuid PK), jobType, status, startedAt, completedAt, durationMs
+  recordsFetched, recordsFailed, errorMessage, metadata (JSON)
+  → has many: raw_responses, politicians_snapshots, spending_snapshots, contract_snapshots
+  Indexes: [jobType, status], [startedAt]
 
-DeputadoResumo {
-  id, nome, siglaPartido, siglaUf: string
-  urlFoto: string
-  email: string
-  despesaTotal: number
-  despesasPorTipo: { tipoDespesa: string, valorTotal: number }[]
-}
+raw_responses
+  id (uuid PK), source, endpointUrl, httpMethod, httpStatus
+  responseHash (SHA256), responseBody (JSON), responseSizeBytes
+  fetchedAt, durationMs, syncJobId (FK → sync_jobs)
+  Indexes: [source, fetchedAt], [syncJobId], [responseHash]
 
-SenadorResumo {
-  codigo, nome, siglaPartido, siglaUf: string
-  urlFoto: string
-  despesaTotal: number
-}
+politicians_snapshots
+  id (uuid PK), version, periodo, deputados (JSON), senadores (JSON)
+  emendas (JSON), viagens (JSON), cartoes (JSON)
+  status, syncJobId (FK), createdAt, isLatest (bool)
 
-PartidoResumo {
-  sigla: string
-  nome: string
-  totalDeputados: number
-  totalSenadores: number
-  despesaTotal: number
-}
+spending_snapshots
+  id (uuid PK), version, ano, totalPago, totalEmpenhado, totalLiquidado
+  porOrgao (JSON), syncJobId (FK), createdAt, isLatest (bool)
+  Index: [ano, isLatest]
+
+contract_snapshots
+  id (uuid PK), version, contratos (JSON), periodoInicio, periodoFim
+  syncJobId (FK), createdAt, isLatest (bool)
+
+display_snapshots
+  id (uuid PK), pageRoute, componentName, dataType, dataSnapshotId
+  servedAt, invalidatedAt
+  Indexes: [pageRoute, servedAt], [dataType, dataSnapshotId]
 ```
 
-## Cache Keys
-
-| Key Pattern | TTL | Content |
-|-------------|-----|---------|
-| `spending-{year}` | 300s | SpendingSummary |
-| `contracts-recent-{days}` | 600s | Contrato[] |
-| `politicians-data` | 3600s | PoliticiansData |
-| `politicians-data` (cron) | 86400s | PoliticiansData (24h for pre-fetch) |
-
-## Reference Constants (src/lib/utils/constants.ts)
+## Shared Types (@raio-x/types)
 
 ```
-REFERENCES = {
-  salarioMinimo:     1_621        R$/month (2025)
-  cestaBasica:       680          R$/month
-  escolaFNDE:        5_000_000    R$/school
-  consultaSUS:       10           R$/consultation
-  populacaoBR:       213_400_000  people
-  familiaMedia:      3.3          people/family
-  casaPopular:       200_000      R$/house
-  vacinaDose:        50           R$/dose
-  onibus:            800_000      R$/bus
-  quadraEsportiva:   500_000      R$/court
-  wifiEscolar:       20_000       R$/school
-}
+SpendingSummary { totalPago, totalEmpenhado, totalLiquidado, porOrgao[], updatedAt, source }
+DespesaPorOrgao { codigo, orgaoSuperior, despesaPaga, despesaEmpenhada, despesaLiquidada }
+Contrato { id, dataVigencia*, valor*, objeto, fornecedor { nome, cnpj }, unidadeGestora }
+PoliticiansData { deputados[], senadores[], partidos[], atualizadoEm, fonte }
+DeputadoRanking { id, nome, partido, uf, urlFoto, despesaTotal, despesasPorTipo[] }
+SenadorRanking { codigo, nome, partido, uf, urlFoto, despesaTotal }
+PartidoResumo { sigla, nome, totalDeputados, totalSenadores, despesaTotal }
 ```
 
-## Data Flow Summary
+## Reference Constants (@raio-x/utils)
 
 ```
-External APIs
-  ├── Portal da Transparência → transparency.ts (retry 3x, 300ms delay, 15s timeout)
-  ├── Câmara dos Deputados    → camara.ts (paginated, bulk expense fetch)
-  ├── Senado (Codante)        → senado.ts (bulk expenses + party summary)
-  └── TSE                     → tse.ts (reserved, not actively used)
-        │
-        ▼
-  cache.ts (Redis/in-memory, keyed by year/days/type)
-        │
-        ▼
-  Services (spending-service, contracts-service, politicians-service)
-        │
-        ▼
-  Server Components (page.tsx files) → SSR HTML
-        │
-        ▼
-  Client Components (SpendingPoller, PoliticiansContent → poll API routes)
+REFERENCES (46 values, sources: IBGE, FNDE, DIEESE, SIGTAP, ANP, 2024-2026)
+  Income:     salarioMinimo=1621, cestaBasica=680
+  Education:  escolaFNDE=5M, merenda=0.57, wifiEscolar=20k
+  Health:     consultaSUS=10, ambulancia=310k, respirador=35k
+  Housing:    casaPopular=200k (updated 270k in some refs)
+  Transport:  onibus=800k
+  Security:   viaturaPolicial=300k
+  Culture:    quadraEsportiva=500k
+
+convertToEquivalences(amount) → 10 metrics (salaries, schools, consults, etc.)
+pickRandomComparisons(total, count) → deterministic seeded comparisons
 ```
+
+## Cache Keys (Next.js layer)
+
+| Key | TTL | Source |
+|-----|-----|--------|
+| `spending-{year}` | 300s | NestJS /api/v1/spending/summary |
+| `contracts-recent-{days}` | 600s | NestJS /api/v1/spending/contracts |
+| `politicians-data` | 3600s | NestJS /api/v1/politicians |
+| `politicians-data` (cron) | 86400s | Pre-fetch (daily) |

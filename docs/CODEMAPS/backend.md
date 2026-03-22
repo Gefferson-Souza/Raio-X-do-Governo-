@@ -1,86 +1,99 @@
-<!-- Generated: 2026-03-20 | Files scanned: 56 | Token estimate: ~800 -->
+<!-- Generated: 2026-03-22 | Files scanned: 26 | Token estimate: ~800 -->
 
 # Backend
 
-## API Routes
+## NestJS API Routes (prefix: /api/v1)
 
 ```
-GET  /api/spending → route.ts → getSpendingData(2026) → SpendingSummary JSON
-     Headers: Cache-Control: public, s-maxage=300, stale-while-revalidate=600
-     X-Data-Source: live | cached | error
-     Status: 200 (ok) | 502 (error)
+GET  /api/v1/health
+  → HealthController.check → PrismaService.$queryRaw('SELECT 1')
+  → { status: 'ok'|'degraded', checks: { database } }
 
-GET  /api/politicians → route.ts → fetchDeputados + fetchSenadores + fetchPartidos → PoliticiansData JSON
-     Headers: Cache-Control: public, s-maxage=3600, stale-while-revalidate=86400
-     maxDuration: 300 (5min)
-     Status: 200 | 502
+GET  /api/v1/spending/summary?year=2026
+  → SpendingController.getSummary → SpendingService.getLatestSnapshot(year)
+  → PrismaService: spendingSnapshot.findFirst({ where: { ano, isLatest: true } })
+  → { totalPago, totalEmpenhado, totalLiquidado, porOrgao[] }
 
-POST /api/og?valor=&item=&equivalencia= → route.tsx → ImageResponse (1200x630)
-     Runtime: edge
-     Fonts: Epilogue, Space Grotesk (fetched at request time)
+GET  /api/v1/politicians
+  → PoliticiansController.getAll → PoliticiansService.getLatestSnapshot()
+  → PrismaService: politiciansSnapshot.findFirst({ where: { isLatest: true } })
+  → { periodo, deputados, senadores, emendas, viagens, cartoes }
 
-GET  /api/cron/politicians → route.ts → full politicians pre-fetch
-     Trigger: vercel.json cron "0 6 * * *" (daily 6am)
-     maxDuration: 300 (5min)
-     Auth: CRON_SECRET (optional)
+GET  /api/v1/spending/contracts
+  → ContractsController.getRecent → ContractsService.getLatestSnapshot()
+  → PrismaService: contractSnapshot.findFirst({ where: { isLatest: true } })
+  → Contrato[] (last 30 days)
+
+POST /api/v1/admin/trigger-sync/:type  (type: spending|politicians|contracts|all)
+  → AdminController.triggerSync → *SyncService.syncAll()
+  → Manual sync trigger (no auth — needs protection in prod)
 ```
 
-## Service → API Client Chain
+## Next.js BFF Route Handlers (apps/web)
 
 ```
-spending-service.ts
-  getSpendingData(year)
-    └── getCached('spending-{year}')        [cache.ts, TTL 300s]
-    └── fetchSpendingSummary(year)          [transparency.ts]
-          └── 16× fetchDespesasPorOrgao(year, orgaoId)
-                └── apiGet('/despesas/por-orgao')
-                      └── fetchWithRetry(url, 3 attempts, exponential backoff)
+GET  /api/spending → spending-service.ts → fetch(NestJS /api/v1/spending/summary)
+     Cache-Control: s-maxage=300, stale-while-revalidate=600
 
-contracts-service.ts
-  getRecentContracts(days=30)
-    └── getCached('contracts-recent-{days}')   [cache.ts, TTL 600s]
-    └── fetchRecentContracts(days)             [transparency.ts]
-          └── 8× fetchContratos(startDate, endDate, orgaoId)
-          fallback: same period previous year if empty
+GET  /api/politicians → politicians-service.ts → fetch(NestJS /api/v1/politicians)
+     Cache-Control: s-maxage=3600, stale-while-revalidate=86400
 
-politicians-service.ts
-  getPoliticiansData()
-    └── getCached('politicians-data')       [cache.ts, TTL 3600s]
-    └── fetchDeputados()                    [camara.ts]
-          └── GET /deputados (paginated)
-          └── GET /deputados/{id}/despesas (per deputy)
-    └── fetchSenadores()                    [senado.ts]
-          └── GET /senator-expenses (bulk)
-    └── fetchPartidos()                     [senado.ts]
-          └── GET /senator-expenses/parties
+POST /api/cron/politicians → cron trigger (vercel.json daily 6am)
+
+POST /api/og?valor=&item=&equivalencia= → edge OG image (1200x630)
 ```
 
-## Cache Layer
+## Sync Services (Cron: daily 5-6 AM)
 
 ```
-cache.ts
-  getCached<T>(key) → Redis (Upstash) ──fallback──→ In-memory Map
-  setCache<T>(key, value, ttl) → writes both Redis + in-memory
-  Redis errors silently caught → in-memory always available
+SyncSchedulerService (@nestjs/schedule)
+  5:00 AM → PoliticiansSyncService.syncAll()
+    → Camara API (paginated, 10-page limit, 2s batch delay)
+    → Codante API (senators + parties)
+    → Creates PoliticiansSnapshot (isLatest=true, previous=false)
+
+  6:00 AM → SpendingSyncService.syncAll()
+    → Portal da Transparencia (16 agencies, 300ms delay)
+    → Creates SpendingSnapshot (isLatest=true)
+
+  6:00 AM → ContractsSyncService.syncAll()
+    → Portal da Transparencia (8 agencies, 300ms delay, last 30 days)
+    → Creates ContractSnapshot (isLatest=true)
+
+All syncs:
+  → AuditService.createSyncJob() at start
+  → AuditService.saveRawResponse() per API call (SHA256 hash)
+  → AuditService.completeSyncJob() at end (duration, counts)
 ```
 
-## Key Files
+## Module Dependency Graph
 
 ```
-src/lib/api/transparency.ts   (289 lines) Portal da Transparência client, retry, rate limiting
-src/lib/api/camara.ts          (84 lines)  Câmara dos Deputados client, pagination
-src/lib/api/senado.ts         (103 lines)  Senate/Codante API client
-src/lib/api/tse.ts             (61 lines)  Electoral board API client (reserved)
-src/lib/api/cache.ts           (69 lines)  Two-tier cache (Redis + Map)
-src/lib/api/types.ts          (138 lines)  Common TypeScript interfaces
-src/lib/api/camara-types.ts   (114 lines)  Deputy/Senator types
+AppModule
+  ├── ConfigModule (global, .env)
+  ├── ScheduleModule (cron)
+  ├── PrismaModule → PrismaService (global)
+  ├── AuditModule → AuditService (global)
+  ├── HealthModule → HealthController
+  ├── SpendingModule → SpendingController, SpendingService
+  ├── PoliticiansModule → PoliticiansController, PoliticiansService
+  ├── ContractsModule → ContractsController, ContractsService
+  ├── SyncModule → SpendingSyncService, PoliticiansSyncService, ContractsSyncService, SyncSchedulerService
+  └── AdminModule → AdminController (imports SyncModule)
+```
 
-src/lib/services/spending-service.ts     (31 lines) Cache-aside for spending
-src/lib/services/contracts-service.ts    (26 lines) Cache-aside for contracts
-src/lib/services/politicians-service.ts  (23 lines) Cache-aside for politicians
+## Key Files (apps/api/src/)
 
-src/app/api/spending/route.ts            (20 lines) GET spending endpoint
-src/app/api/politicians/route.ts        (132 lines) GET politicians endpoint
-src/app/api/cron/politicians/route.ts   (359 lines) Cron pre-fetch job
-src/app/api/og/route.tsx                (213 lines) OG image generator (edge)
+```
+main.ts              Entry: global prefix, CORS, ValidationPipe
+app.module.ts        Root module, all imports
+prisma.module.ts     PrismaService provider (global)
+health/              Health check (DB connectivity)
+spending/            Spending summary endpoint
+politicians/         Politicians data endpoint
+contracts/           Contracts endpoint
+sync/                Cron sync services (spending, politicians, contracts)
+audit/               Raw response logging, sync job tracking
+admin/               Manual sync trigger
+__tests__/           Vitest specs (audit, spending, sync)
 ```

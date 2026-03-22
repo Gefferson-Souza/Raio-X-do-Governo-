@@ -239,7 +239,7 @@ export default async function Home() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {topContracts.map((contrato, index) => (
               <ContractCard
-                key={contrato.id}
+                key={`${contrato.id}-${index}`}
                 icon={pickContractIcon(contrato.compra?.objeto ?? '')}
                 title={contrato.compra?.objeto ?? 'Sem descricao'}
                 description={`${contrato.fornecedor?.nome ?? 'N/A'} - CNPJ: ${contrato.fornecedor?.cnpjFormatado ?? 'N/A'}`}

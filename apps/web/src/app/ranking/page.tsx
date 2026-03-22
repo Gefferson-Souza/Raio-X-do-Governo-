@@ -205,7 +205,7 @@ export default async function RankingPage() {
           </p>
 
           <div className="flex flex-col gap-4">
-            {remainingOrgaos.map((orgao) => {
+            {remainingOrgaos.map((orgao, index) => {
               const sobra = orgao.empenhado - orgao.pago
               const percentGasto = orgao.empenhado > 0
                 ? Math.round((orgao.pago / orgao.empenhado) * 100)
@@ -213,7 +213,7 @@ export default async function RankingPage() {
 
               return (
                 <div
-                  key={orgao.codigoOrgao}
+                  key={`${orgao.codigoOrgao}-${index}`}
                   className="bg-white border-2 border-outline-variant p-6"
                 >
                   <h4 className="font-headline font-black uppercase text-xl tracking-tight text-on-surface">
@@ -312,7 +312,7 @@ export default async function RankingPage() {
               const status = TIMELINE_STATUSES[index % TIMELINE_STATUSES.length]
               return (
                 <TimelineRow
-                  key={contrato.id}
+                  key={`${contrato.id}-${index}`}
                   time={formatTimeBR(contrato.dataAssinatura)}
                   orgao={contrato.unidadeGestora.orgaoVinculado.nome}
                   description={contrato.compra.objeto}
