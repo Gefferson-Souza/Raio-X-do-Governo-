@@ -1,26 +1,24 @@
-import { getCached, setCache } from '@/lib/api/cache'
-import { fetchRecentContracts } from '@/lib/api/transparency'
 import type { Contrato } from '@/lib/api/types'
 
-const CACHE_TTL = 600
+const API_URL = process.env.API_URL ?? 'http://localhost:3001'
 
-export async function getRecentContracts(days: number = 30): Promise<{
+export async function getRecentContracts(_days: number = 30): Promise<{
   readonly data: Contrato[]
   readonly source: 'live' | 'cached' | 'error'
 }> {
-  const cacheKey = `contracts-recent-${days}`
-
-  const cached = await getCached<Contrato[]>(cacheKey)
-  if (cached) {
-    return { data: cached, source: 'cached' }
-  }
-
   try {
-    const data = await fetchRecentContracts(days)
-    await setCache(cacheKey, data, CACHE_TTL)
-    return { data, source: 'live' }
+    const res = await fetch(`${API_URL}/api/v1/spending/contracts`, {
+      next: { revalidate: 600 },
+    })
+
+    if (!res.ok) {
+      throw new Error(`NestJS API returned ${res.status}`)
+    }
+
+    const result = await res.json() as { data: Contrato[]; source: 'cached' | 'error'; atualizadoEm: string }
+    return { data: result.data ?? [], source: result.source === 'error' ? 'error' : 'cached' }
   } catch (error) {
-    console.error('[contracts-service] Failed to fetch contracts:', error)
+    console.error('[contracts-service] Failed to fetch from NestJS:', error)
     return { data: [], source: 'error' }
   }
 }

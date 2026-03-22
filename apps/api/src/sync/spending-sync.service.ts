@@ -34,7 +34,7 @@ export class SpendingSyncService {
       for (const codigo of TOP_ORGAOS) {
         try {
           const start = Date.now()
-          const url = `https://api.portaldatransparencia.gov.br/api-de-dados/despesas/por-orgao?ano=${year}&codigoOrgaoSuperior=${codigo}&pagina=1`
+          const url = `https://api.portaldatransparencia.gov.br/api-de-dados/despesas/por-orgao?ano=${year}&orgaoSuperior=${codigo}&pagina=1`
           const res = await fetch(url, {
             headers: { 'chave-api-dados': apiKey },
             signal: AbortSignal.timeout(15_000),

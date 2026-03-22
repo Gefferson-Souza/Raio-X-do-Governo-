@@ -1,12 +1,9 @@
-import { getCached } from '@/lib/api/cache'
 import type { PoliticiansData } from '@/lib/api/camara-types'
 
-const CACHE_KEY = 'politicians-data'
-
-const currentYear = new Date().getFullYear()
+const API_URL = process.env.API_URL ?? 'http://localhost:3001'
 
 const EMPTY_DATA: PoliticiansData = {
-  periodo: { anoAtual: currentYear, anoAnterior: currentYear - 1 },
+  periodo: { anoAtual: new Date().getFullYear(), anoAnterior: new Date().getFullYear() - 1 },
   deputados: { ranking: [], totalGasto: 0, totalGastoAnoAnterior: 0 },
   senadores: { ranking: [], porPartido: [], totalGasto: 0, totalGastoAnoAnterior: 0 },
   emendas: { topAutores: [], totalPago: 0, totalEmpenhado: 0, totalPagoAnoAnterior: 0 },
@@ -18,6 +15,18 @@ const EMPTY_DATA: PoliticiansData = {
 }
 
 export async function getPoliticiansData(): Promise<PoliticiansData> {
-  const cached = await getCached<PoliticiansData>(CACHE_KEY)
-  return cached ?? EMPTY_DATA
+  try {
+    const res = await fetch(`${API_URL}/api/v1/politicians`, {
+      next: { revalidate: 3600 },
+    })
+
+    if (!res.ok) {
+      throw new Error(`NestJS API returned ${res.status}`)
+    }
+
+    return await res.json() as PoliticiansData
+  } catch (error) {
+    console.error('[politicians-service] Failed to fetch from NestJS:', error)
+    return EMPTY_DATA
+  }
 }

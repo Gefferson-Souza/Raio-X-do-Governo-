@@ -15,5 +15,6 @@ import { ContractsModule } from '../contracts/contracts.module'
     ContractsSyncService,
     SyncSchedulerService,
   ],
+  exports: [SpendingSyncService, PoliticiansSyncService, ContractsSyncService],
 })
 export class SyncModule {}
