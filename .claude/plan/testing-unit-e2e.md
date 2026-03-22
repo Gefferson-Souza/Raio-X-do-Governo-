@@ -77,8 +77,8 @@ describe('AuditService')
   describe('completeSyncJob')
     - atualiza status para "completed"
     - atualiza status para "failed" com errorMessage
-    - calcula durationMs corretamente
-    - lida com job inexistente (null findUnique)
+    - calcula durationMs corretamente (Date.now() - startedAt)
+    - passa recordsFetched corretamente ao update
 ```
 
 #### spending.controller.spec.ts (P0)
@@ -106,7 +106,7 @@ describe('SpendingSyncService')
     - completa job com status "completed" quando OK
     - completa job com status "failed" quando API key ausente
     - continua mesmo quando um orgao falha (graceful degradation)
-    - respeita delay de 300ms entre requests
+    - respeita delay de 300ms entre requests (usar vi.useFakeTimers + vi.advanceTimersByTime)
 ```
 
 #### politicians-sync.service.spec.ts (P0)
@@ -120,22 +120,21 @@ describe('PoliticiansSyncService')
     - calcula status 'partial' quando parte falha
     - calcula status 'error' quando tudo falha
     - salva ranking completo (nao truncado)
-  describe('fetchDeputadosRanking')
-    - para apos maxPages (10)
-    - calcula totalGasto por deputado
-    - ordena por totalGasto descrescente
-    - gera topDespesas com top 5 tipos
-  describe('fetchSenadoresRanking')
-    - tenta ano atual, fallback ano anterior
-    - loga warning quando senador falha
+  # fetchDeputadosRanking e fetchSenadoresRanking sao private — testar indiretamente via syncAll():
+    - para apos maxPages (mock fetch retorna < 100 items na pagina 2)
+    - calcula totalGasto por deputado corretamente
+    - ordena ranking por totalGasto descrescente
+    - gera topDespesas com top 5 tipos por deputado
+    - senadores: tenta ano atual, fallback ano anterior
+    - senadores: loga warning quando fetch de despesas falha
 ```
 
 ### Mock Strategy
 
 ```typescript
-// Mock do PrismaService
+// Mock do PrismaService (DEVE incluir findFirst em syncJob — usado em completeSyncJob e sync services)
 const mockPrisma = {
-  syncJob: { create: vi.fn(), findUnique: vi.fn(), update: vi.fn() },
+  syncJob: { create: vi.fn(), findUnique: vi.fn(), findFirst: vi.fn(), update: vi.fn() },
   rawResponse: { create: vi.fn() },
   spendingSnapshot: { findFirst: vi.fn(), updateMany: vi.fn(), create: vi.fn() },
   politiciansSnapshot: { findFirst: vi.fn(), updateMany: vi.fn(), create: vi.fn() },
@@ -146,6 +145,9 @@ const mockPrisma = {
 // Mock do fetch global (para sync services)
 const mockFetch = vi.fn()
 global.fetch = mockFetch
+
+// Fake timers para testar delays (300ms, 2000ms) sem espera real
+// Usar vi.useFakeTimers() no beforeEach e vi.advanceTimersByTime() nos testes de delay
 ```
 
 ### Configuracao Vitest para API
@@ -153,12 +155,18 @@ global.fetch = mockFetch
 Criar `apps/api/vitest.config.ts`:
 ```typescript
 import { defineConfig } from 'vitest/config'
+import swc from 'unplugin-swc'
 import { resolve } from 'path'
 
 export default defineConfig({
+  plugins: [
+    // SWC necessario para emitDecoratorMetadata do NestJS (@Injectable, @Controller, etc.)
+    swc.vite({ module: { type: 'es6' } }),
+  ],
   test: {
     globals: true,
     environment: 'node',
+    setupFiles: ['./src/__tests__/setup.ts'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'lcov'],
@@ -173,6 +181,16 @@ export default defineConfig({
     },
   },
 })
+```
+
+Criar `apps/api/src/__tests__/setup.ts`:
+```typescript
+import 'reflect-metadata'
+```
+
+Instalar dependencia:
+```bash
+npm install --save-dev unplugin-swc @swc/core
 ```
 
 Adicionar script ao package.json:
@@ -219,7 +237,8 @@ e2e/
     gerador.spec.ts           ← Gerador de impacto
     navigation.spec.ts        ← Navegacao entre paginas (top-nav, bottom-nav, side-nav)
   fixtures/
-    base.fixture.ts           ← Fixture base com page setup
+    base.fixture.ts           ← Fixture: intercepta /api/spending e /api/politicians com mock data,
+                                 aguarda hydration do React Query, helpers de navegacao
 ```
 
 ### Cenarios E2E detalhados
@@ -228,7 +247,7 @@ e2e/
 ```
 describe('Home Page')
   - pagina carrega sem erro (status 200)
-  - titulo "RAIO-X DO GOVERNO" visivel
+  - header com texto "RAIO-X" visivel (verificar texto exato no top-nav, pode nao ser "DO GOVERNO")
   - counter hero mostra valor em R$ (nao zero, nao NaN)
   - stats bar mostra "Empenhado", "Liquidado", "Pago"
   - pelo menos 1 contrato listado com valor
@@ -250,8 +269,10 @@ describe('Ranking Page')
 #### politicos.spec.ts (P0)
 ```
 describe('Politicos Page')
+  # IMPORTANTE: usar page.route() para interceptar /api/politicians e retornar dados mock
+  # Sem isso, a pagina depende de dados reais que podem nao existir em dev
   - pagina carrega sem erro
-  - lista de politicos aparece apos loading
+  - interceptar /api/politicians com mock data → lista aparece
   - pelo menos 1 deputado com nome e partido visivel
   - navegacao para /politicos/congresso funciona
   - navegacao para /politicos/partidos funciona
@@ -298,9 +319,9 @@ export default defineConfig({
     { name: 'mobile', use: { ...devices['Pixel 7'] } },
   ],
   webServer: {
-    command: 'npm run dev',
+    command: process.env.CI ? 'npm run build && npm run start' : 'npm run dev',
     url: 'http://localhost:3000',
-    reuseExistingServer: true,
+    reuseExistingServer: !process.env.CI,
     timeout: 120_000,
   },
 })
@@ -359,9 +380,9 @@ export default defineConfig({
 | Categoria | Arquivos | Testes | Status |
 |-----------|----------|--------|--------|
 | Unit (web) existentes | 8 | 75 | OK |
-| Unit (API) novos | 8 | ~54 | A CRIAR |
+| Unit (API) novos | 8 | ~50 | A CRIAR |
 | E2E novos | 6 | ~31 | A CRIAR |
-| **TOTAL** | **22** | **~160** | |
+| **TOTAL** | **22** | **~156** | |
 
 ---
 
