@@ -1,5 +1,5 @@
 export { REFERENCES } from './constants'
-export { formatBRL, humanizeNumber, humanizeCount, formatDateBR } from './format'
+export { formatBRL, humanizeNumber, humanizeCount, formatDateBR, parseBRNumber } from './format'
 export { convertToEquivalences } from './equivalences'
 export type { Equivalences } from './equivalences'
 export { pickRandomComparisons } from './comparisons'

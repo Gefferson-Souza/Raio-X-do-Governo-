@@ -1,0 +1,68 @@
+services:
+  # ── PostgreSQL (banco principal) ──
+  postgres:
+    image: postgres:16-alpine
+    container_name: raio-x-db
+    environment:
+      POSTGRES_USER: raioxgoverno
+      POSTGRES_PASSWORD: raioxgoverno_dev
+      POSTGRES_DB: raioxdogoverno
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U raioxgoverno -d raioxdogoverno"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      - app-net
+
+  # ── Redis (cache) ──
+  redis:
+    image: redis:7-alpine
+    container_name: raio-x-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+    command: redis-server --appendonly yes --maxmemory 128mb --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      - app-net
+
+  # ── NestJS API (backend) ──
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    container_name: raio-x-api
+    ports:
+      - "3001:3001"
+    environment:
+      DATABASE_URL: postgresql://raioxgoverno:raioxgoverno_dev@postgres:5432/raioxdogoverno
+      REDIS_URL: redis://redis:6379
+      TRANSPARENCY_API_KEY: ${TRANSPARENCY_API_KEY}
+      CORS_ORIGIN: http://localhost:3000
+      PORT: 3001
+      NODE_ENV: production
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - app-net
+
+volumes:
+  pgdata:
+  redisdata:
+
+networks:
+  app-net:
+    name: raio-x-net

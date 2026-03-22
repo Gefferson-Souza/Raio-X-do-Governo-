@@ -1,0 +1,60 @@
+services:
+  # ── PostgreSQL ──
+  postgres:
+    image: postgres:16-alpine
+    container_name: raio-x-db
+    environment:
+      POSTGRES_USER: raioxgoverno
+      POSTGRES_PASSWORD: raioxgoverno_dev
+      POSTGRES_DB: raioxdogoverno
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U raioxgoverno -d raioxdogoverno"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # ── Redis ──
+  redis:
+    image: redis:7-alpine
+    container_name: raio-x-redis
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes --maxmemory 64mb --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # ── pgAdmin (opcional, UI para PostgreSQL) ──
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: raio-x-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@raioxdogoverno.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_LISTEN_PORT: 5050
+    ports:
+      - "5050:5050"
+    depends_on:
+      - postgres
+    profiles:
+      - tools
+
+  # ── RedisInsight (opcional, UI para Redis) ──
+  redisinsight:
+    image: redis/redisinsight:latest
+    container_name: raio-x-redisinsight
+    ports:
+      - "5540:5540"
+    depends_on:
+      - redis
+    profiles:
+      - tools
+
+volumes:
+  pgdata:

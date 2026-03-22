@@ -29,6 +29,15 @@ export function humanizeCount(value: number): string {
   return humanize(value, '') || value.toLocaleString('pt-BR')
 }
 
+export function parseBRNumber(value: string | number | null | undefined): number {
+  if (value === null || value === undefined) return 0
+  if (typeof value === 'number') return value
+  if (typeof value !== 'string' || value === '-' || value === '') return 0
+  const cleaned = value.replace(/\./g, '').replace(',', '.')
+  const num = parseFloat(cleaned)
+  return isNaN(num) ? 0 : num
+}
+
 export function formatDateBR(isoDate: string | null | undefined): string {
   if (!isoDate) return 'N/A'
   try {

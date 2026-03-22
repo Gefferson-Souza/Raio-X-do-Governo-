@@ -5,15 +5,6 @@ import { AuditService } from '../audit/audit.service'
 const CAMARA_BASE = 'https://dadosabertos.camara.leg.br/api/v2'
 const CODANTE_BASE = 'https://apis.codante.io/senator-expenses'
 
-function parseBRNumber(value: string | number | null | undefined): number {
-  if (value === null || value === undefined) return 0
-  if (typeof value === 'number') return value
-  if (typeof value !== 'string' || value === '-' || value === '') return 0
-  const cleaned = value.replace(/\./g, '').replace(',', '.')
-  const num = parseFloat(cleaned)
-  return isNaN(num) ? 0 : num
-}
-
 @Injectable()
 export class PoliticiansSyncService {
   private readonly logger = new Logger(PoliticiansSyncService.name)
@@ -69,8 +60,8 @@ export class PoliticiansSyncService {
         data: {
           version: (lastVersion?.version ?? 0) + 1,
           periodo: { anoAtual: year, anoAnterior: year - 1 },
-          deputados: { ranking: deputados.ranking.slice(0, 20), totalGasto: deputados.totalGasto, totalGastoAnoAnterior: 0 },
-          senadores: { ranking: senadores.ranking.slice(0, 20), porPartido: partidos, totalGasto: senadores.totalGasto, totalGastoAnoAnterior: 0 },
+          deputados: { ranking: deputados.ranking, totalGasto: deputados.totalGasto, totalGastoAnoAnterior: 0 },
+          senadores: { ranking: senadores.ranking, porPartido: partidos, totalGasto: senadores.totalGasto, totalGastoAnoAnterior: 0 },
           emendas: { topAutores: [], totalPago: 0, totalEmpenhado: 0, totalPagoAnoAnterior: 0 },
           viagens: { recentes: [], totalGasto: 0 },
           cartoes: { topPortadores: [], totalGasto: 0 },
@@ -195,7 +186,10 @@ export class PoliticiansSyncService {
           totalGasto = sum ? parseFloat(String(sum)) : 0
           if (isNaN(totalGasto)) totalGasto = 0
           if (totalGasto > 0) break
-        } catch { continue }
+        } catch (err) {
+          this.logger.warn(`Failed to fetch expenses for senator ${senator.id}: ${err}`)
+          continue
+        }
       }
 
       rankings.push({

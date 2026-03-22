@@ -1,29 +1,18 @@
 {
+  "extends": "./tsconfig.base.json",
   "compilerOptions": {
-    "target": "ES2017",
-    "lib": ["dom", "dom.iterable", "esnext"],
-    "allowJs": true,
-    "skipLibCheck": true,
-    "strict": true,
-    "noEmit": true,
-    "esModuleInterop": true,
-    "module": "esnext",
     "moduleResolution": "node",
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "jsx": "react-jsx",
-    "incremental": true,
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./apps/web/src/*"],
+      "@raio-x/types": ["./libs/shared/types/src/index.ts"],
+      "@raio-x/utils": ["./libs/shared/utils/src/index.ts"]
     }
   },
   "include": [
-    "next-env.d.ts",
-    "**/*.ts",
-    "**/*.tsx",
-    ".next/types/**/*.ts",
-    ".next/dev/types/**/*.ts",
-    "**/*.mts"
+    "apps/web/src/**/*.ts",
+    "apps/web/src/**/*.tsx",
+    "apps/api/src/**/*.ts",
+    "libs/**/*.ts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules", "dist", ".next"]
 }

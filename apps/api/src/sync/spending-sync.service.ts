@@ -2,21 +2,13 @@ import { Injectable, Logger } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { PrismaService } from '../prisma.module'
 import { AuditService } from '../audit/audit.service'
+import { parseBRNumber } from '@raio-x/utils'
 
 const TOP_ORGAOS = [
   '20000', '26000', '30000', '36000', '39000',
   '24000', '25000', '32000', '35000', '22000',
   '44000', '52000', '53000', '54000', '55000', '56000',
 ]
-
-function parseBRNumber(value: string | number | undefined | null): number {
-  if (value === null || value === undefined) return 0
-  if (typeof value === 'number') return value
-  if (typeof value !== 'string' || value === '-' || value === '') return 0
-  const cleaned = value.replace(/\./g, '').replace(',', '.')
-  const num = parseFloat(cleaned)
-  return isNaN(num) ? 0 : num
-}
 
 @Injectable()
 export class SpendingSyncService {
